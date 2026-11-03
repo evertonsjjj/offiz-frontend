@@ -1,0 +1,5930 @@
+/* ============================================================
+   Offiz — estilos da aplicação
+   ============================================================ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+}
+
+body {
+  /* Atmosfera da marca Adamá: o gradiente luminoso (lavanda ↔ creme) é o
+     fundo vivo do produto. */
+  background: var(--env);
+  background-attachment: fixed;
+  color: var(--text-0);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 0 0 0.35em;
+}
+
+h1 { font-size: 1.7rem; }
+h2 { font-size: 1.2rem; }
+h3 { font-size: 1.05rem; }
+
+p { margin: 0 0 0.6em; }
+a { color: var(--link); text-decoration: none; }
+a:hover { color: var(--accent-forte); text-decoration: underline; }
+code {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  background: var(--hover);
+  padding: 0.1em 0.4em;
+  border-radius: 4px;
+}
+ul { list-style: none; margin: 0; padding: 0; }
+
+::selection { background: color-mix(in srgb, var(--accent) 22%, transparent); }
+
+/* Foco visível para navegação por teclado */
+a:focus-visible,
+button:focus-visible,
+summary:focus-visible,
+[role='tab']:focus-visible {
+  outline: 2px solid var(--predio-acento, var(--accent));
+  outline-offset: 2px;
+  border-radius: var(--raio-s);
+}
+
+/* ---------- Ícones de traço (components/Icone.tsx) ----------
+   Onde o ícone entra num contêiner FLEX (botão, chip, item de menu), o
+   alinhamento é do flex e não precisa de nada. O problema é o resto: um
+   <svg> é `inline` por padrão, então dentro de <strong>, <h3>, <summary>
+   ou .botao-texto ele senta na LINHA DE BASE do texto — e uma caixa de
+   20px sobre a base fica ~2px baixa em relação às letras, o suficiente
+   para a linha parecer torta sem que se saiba por quê.
+   `vertical-align` só vale para inline: nos contêineres flex acima o
+   navegador ignora esta declaração, então uma regra resolve os dois casos.
+
+   `flex: none` porque em contêiner flex com texto que trunca (título de
+   peça, nome de arquivo), o ícone era comprimido junto — virava um risco.
+
+   Não use `svg { … }` solto: a marca (LogoMark), o mapa e os gráficos do
+   dashboard também são svg e têm alinhamento próprio. */
+.botao svg,
+.botao-texto svg,
+.status-pill svg,
+strong > svg,
+summary > svg,
+h1 > svg, h2 > svg, h3 > svg, h4 > svg {
+  vertical-align: -0.15em;
+  flex: none;
+}
+
+/* O ícone que SE DESENHA (redesign ago/2026): dasharray fixo em 90 — nenhum
+   traço do set de 24-grid passa disso — e o offset animado. Usado no check de
+   aprovar enquanto a decisão viaja; o kill-switch de movimento reduzido zera. */
+.icone-desenha :is(path, circle, rect, line, polyline, ellipse) {
+  stroke-dasharray: 90;
+  animation: icone-desenha 300ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes icone-desenha { from { stroke-dashoffset: 90; } to { stroke-dashoffset: 0; } }
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------- Formulários ---------- */
+
+input, select, textarea, button {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+input, select, textarea {
+  background: var(--bg-1);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-s);
+  padding: 0.55rem 0.75rem;
+  color: var(--text-0);
+  transition: border-color var(--transicao), box-shadow var(--transicao);
+  width: 100%;
+}
+
+input::placeholder, textarea::placeholder { color: var(--text-2); }
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--predio-acento, var(--accent));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--predio-acento, var(--accent)) 20%, transparent);
+}
+
+select { cursor: pointer; }
+textarea { resize: vertical; }
+
+.campo {
+  display: block;
+  margin-bottom: 0.9rem;
+}
+
+.campo > span {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-1);
+  margin-bottom: 0.35rem;
+  letter-spacing: 0.02em;
+}
+
+.linha-campos {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.9rem;
+}
+
+.linha-form {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 0.9rem;
+  flex-wrap: wrap;
+}
+.linha-form input { flex: 2 1 220px; }
+.linha-form select { flex: 1 1 140px; width: auto; }
+
+.campo-chave {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+.campo-chave input { flex: 1 1 260px; font-family: var(--font-mono); font-size: 0.85rem; }
+
+/* ---------- Botões ---------- */
+
+.botao {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1px solid transparent;
+  border-radius: var(--raio-s);
+  padding: 0.55rem 1.1rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background var(--transicao), border-color var(--transicao), transform var(--transicao);
+  white-space: nowrap;
+}
+.botao:active { transform: translateY(1px); }
+.botao:disabled { opacity: 0.55; cursor: not-allowed; }
+
+/* A tinta do botão primário é `--predio-ink` quando o prédio tem cor própria, e
+   só então: `--accent-ink` é o token do Offiz e continua servindo os fundos
+   azuis que a marca do cliente não pinta (avatar da conta, selo de não-lidos,
+   aba ativa do painel). Ver lib/tema.ts. */
+.botao-primario {
+  background: linear-gradient(180deg, var(--predio-acento, var(--accent)), color-mix(in srgb, var(--predio-acento, var(--accent)) 82%, var(--tinta)));
+  color: var(--predio-ink, var(--accent-ink));
+}
+.botao-primario:hover:not(:disabled) {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--predio-acento, var(--accent)) 88%, #fff), var(--predio-acento, var(--accent)));
+}
+
+.botao-fantasma {
+  background: transparent;
+  border-color: var(--borda-forte);
+  color: var(--text-0);
+}
+.botao-fantasma:hover:not(:disabled) {
+  border-color: var(--predio-acento, var(--accent));
+  background: color-mix(in srgb, var(--predio-acento, var(--accent)) 8%, transparent);
+}
+
+.botao-perigo {
+  background: transparent;
+  border-color: color-mix(in srgb, var(--erro) 55%, transparent);
+  color: var(--erro);
+}
+.botao-perigo:hover:not(:disabled) { background: color-mix(in srgb, var(--erro) 12%, transparent); }
+
+.botao-ok {
+  background: transparent;
+  border-color: color-mix(in srgb, var(--ok) 55%, transparent);
+  color: var(--ok);
+}
+.botao-ok:hover:not(:disabled) { background: color-mix(in srgb, var(--ok) 12%, transparent); }
+
+.botao-largo { width: 100%; justify-content: center; }
+.botao-pequeno { padding: 0.3rem 0.7rem; font-size: 0.82rem; }
+
+.botao-texto {
+  background: none;
+  border: none;
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 0;
+}
+.botao-texto:hover { color: var(--accent-forte); text-decoration: underline; }
+.botao-texto.perigo { color: var(--erro); }
+
+/* ---------- Alertas ---------- */
+
+.alerta {
+  border-radius: var(--raio-s);
+  padding: 0.6rem 0.85rem;
+  font-size: 0.88rem;
+  margin: 0.6rem 0;
+  border: 1px solid transparent;
+}
+.alerta-erro {
+  background: color-mix(in srgb, var(--erro) 12%, transparent);
+  border-color: color-mix(in srgb, var(--erro) 35%, transparent);
+  color: var(--erro-ink);
+}
+.alerta-ok {
+  background: color-mix(in srgb, var(--ok) 10%, transparent);
+  border-color: color-mix(in srgb, var(--ok) 32%, transparent);
+  color: var(--ok-ink);
+}
+
+/* ---------- Shell / topbar ---------- */
+
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  /* PAPEL, não vidro. Era `blur(18px) saturate(1.5)` com um catch-light
+     branco por dentro — a chrome do desenho visionOS. O clássico resolve a
+     barra fixa com opacidade total e uma linha: sem frost o texto que passa
+     por baixo não fantasmagoriza, e a barra não custa uma camada de
+     composição a cada scroll. */
+  background: var(--bg-2);
+  border-bottom: 1px solid var(--borda);
+}
+
+.topbar-inner {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0.6rem 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 1.4rem;
+}
+
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.15rem;
+  color: var(--text-0);
+  letter-spacing: 0.01em;
+}
+.logo:hover { text-decoration: none; color: var(--accent-forte); }
+
+.topbar-nav { display: flex; gap: 0.3rem; flex: 1; }
+
+.nav-link {
+  padding: 0.35rem 0.8rem;
+  border-radius: var(--raio-s);
+  color: var(--text-1);
+  font-weight: 500;
+  font-size: 0.92rem;
+}
+.nav-link:hover { color: var(--text-0); text-decoration: none; background: var(--hover); }
+.nav-link.ativo { color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); }
+
+.topbar-direita { display: flex; align-items: center; gap: 1rem; }
+
+.usuario-menu { display: flex; align-items: center; gap: 0.55rem; }
+
+.usuario-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: linear-gradient(160deg, var(--bg-3), var(--bg-2));
+  border: 1px solid var(--borda-forte);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.usuario-info { display: flex; flex-direction: column; line-height: 1.15; }
+.usuario-nome { font-size: 0.85rem; font-weight: 600; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.link-sair {
+  background: none;
+  border: none;
+  padding: 0;
+  text-align: left;
+  font-size: 0.75rem;
+  color: var(--text-2);
+  cursor: pointer;
+}
+.link-sair:hover { color: var(--erro); }
+
+.conteudo { flex: 1; width: 100%; }
+
+.rodape {
+  border-top: 1px solid var(--borda);
+  padding: 1rem 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.8rem;
+  color: var(--text-1);
+  font-size: 0.8rem;
+}
+.rodape-marca { font-size: 0.82rem; }
+.rodape-logo { margin-right: -0.35rem; }
+
+.pagina {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 1.6rem 1.2rem 3rem;
+  width: 100%;
+}
+
+/* Voz de pôster nas galerias de entrada (display grande, não h1 de admin). */
+.titulo-poster {
+  font-family: var(--font-display);
+  font-size: clamp(1.9rem, 4vw, 2.7rem);
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+}
+
+.pagina-cabecalho {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.4rem;
+  flex-wrap: wrap;
+}
+
+.pagina-sub { color: var(--text-1); margin: 0; max-width: 60ch; }
+
+.texto-suave { color: var(--text-2); font-size: 0.88rem; }
+
+/* ---------- Carregando ---------- */
+
+.tela-carregando {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  color: var(--text-1);
+}
+
+.predio-loader {
+  display: grid;
+  grid-template-columns: repeat(2, 14px);
+  gap: 5px;
+  padding: 10px 10px 0;
+  border: 2px solid var(--borda-forte);
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+}
+.predio-loader span {
+  width: 14px;
+  height: 14px;
+  border-radius: 2px;
+  background: var(--janela-apagada);
+  animation: janela-pisca 1.6s ease-in-out infinite;
+}
+.predio-loader span:nth-child(2) { animation-delay: 0.25s; }
+.predio-loader span:nth-child(3) { animation-delay: 0.5s; }
+.predio-loader span:nth-child(4) { animation-delay: 0.75s; }
+.predio-loader span:nth-child(5) { animation-delay: 1s; }
+.predio-loader span:nth-child(6) { animation-delay: 1.25s; }
+
+@keyframes janela-pisca {
+  0%, 100% { background: var(--janela-apagada); }
+  /* O brilho da janela acesa era `rgba(66, 34, 240, .5)` — o ROXO #4222f0 da
+     identidade anterior, cravado em hex dentro do keyframe. Ele sobreviveu a
+     dois redesenhos aceso na tela de carregamento, que é literalmente a
+     primeira coisa que o usuário vê. Agora é o próprio acento. */
+  50% {
+    background: var(--accent);
+    box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 50%, transparent);
+  }
+}
+
+.esqueleto {
+  background: linear-gradient(100deg, var(--bg-2) 40%, var(--esqueleto-brilho) 50%, var(--bg-2) 60%);
+  background-size: 200% 100%;
+  animation: esqueleto-brilho 1.4s linear infinite;
+  border-radius: var(--raio-g);
+  min-height: 230px;
+  border: 1px solid var(--borda);
+}
+@keyframes esqueleto-brilho {
+  to { background-position: -200% 0; }
+}
+
+.esqueleto-linha {
+  min-height: 0;
+  height: 46px;
+  border-radius: var(--raio-s);
+  margin-bottom: 0.45rem;
+}
+
+.esqueleto-card {
+  min-height: 0;
+  height: 84px;
+  border-radius: var(--raio-m);
+}
+
+/* ---------- Sino de notificações ---------- */
+
+.sino-wrapper { position: relative; }
+
+.sino-botao {
+  position: relative;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--raio-s);
+  padding: 0.4rem;
+  color: var(--text-1);
+  cursor: pointer;
+  display: inline-flex;
+  transition: color var(--transicao), background var(--transicao);
+}
+.sino-botao:hover { color: var(--text-0); background: var(--hover); }
+
+.sino-badge {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  background: var(--erro);
+  color: #fff;
+  font-size: 0.62rem;
+  font-weight: 700;
+  border-radius: 999px;
+  min-width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  animation: badge-pop 260ms cubic-bezier(0.2, 0.8, 0.3, 1.3);
+}
+
+@keyframes badge-pop {
+  0% { transform: scale(0.4); opacity: 0; }
+  60% { transform: scale(1.18); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
+.sino-dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  width: min(360px, 88vw);
+  background: var(--bg-2);
+  border: 1px solid var(--borda-forte);
+  border-radius: var(--raio-m);
+  box-shadow: var(--sombra-3);
+  overflow: hidden;
+  z-index: 60;
+}
+
+.sino-cabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.7rem 0.9rem;
+  border-bottom: 1px solid var(--borda);
+}
+
+.sino-lista { max-height: 380px; overflow-y: auto; }
+.sino-cabecalho-notificacoes { flex-wrap: wrap; gap: 0.35rem 0.8rem; }
+.sino-cabecalho-notificacoes > strong { flex-basis: 100%; }
+.sino-cabecalho-notificacoes > button { min-height: 44px; }
+.sino-vazio { padding: 1.4rem; text-align: center; color: var(--text-2); }
+
+/* Menu da conta (o avatar do topo). Reaproveita a moldura do sino — é o mesmo
+   gesto e a mesma posição —, mas é estreito: só nome, e-mail e "Sair". */
+.menu-usuario { width: min(260px, 88vw); }
+.menu-usuario-quem {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+  justify-content: flex-start;
+}
+.menu-usuario-quem > span { font-size: 0.85rem; word-break: break-all; }
+.menu-usuario-acoes { display: flex; justify-content: flex-end; padding: 0.6rem 0.9rem; }
+
+.notificacao-item {
+  display: flex;
+  gap: 0.6rem;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--borda);
+  padding: 0.65rem 0.9rem;
+  cursor: pointer;
+  transition: background var(--transicao);
+}
+.notificacao-item:hover { background: var(--hover); }
+.notificacao-item.nao-lida { background: color-mix(in srgb, var(--accent) 6%, transparent); }
+.notificacao-item.nao-lida .notificacao-titulo::after {
+  content: '';
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.notificacao-icone { font-size: 1.1rem; line-height: 1.3; }
+.notificacao-corpo { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.notificacao-titulo { font-weight: 600; font-size: 0.87rem; color: var(--text-0); }
+.notificacao-texto {
+  font-size: 0.8rem;
+  color: var(--text-1);
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.notificacao-quando { font-size: 0.72rem; color: var(--text-2); }
+
+/* ---------- Auth (login/registro) ---------- */
+
+.auth-tela {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+}
+
+/* Lateral do login: papel, não vitrine. O prédio de pixels com janelas
+   acendendo saiu no redesenho clássico — o que convence é o ciclo de
+   trabalho dito em texto (mesma história da landing). */
+.auth-fachada {
+  background: var(--bg-1);
+  border-right: 1px solid var(--borda);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 2.4rem;
+  padding: 3rem clamp(2rem, 5vw, 4rem);
+}
+
+.fachada-conteudo { max-width: 34ch; }
+
+.fachada-titulo {
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 2.4vw, 2rem);
+  line-height: 1.18;
+  margin: 0 0 0.6rem;
+  text-wrap: pretty;
+}
+.fachada-sub {
+  color: var(--text-2);
+  font-size: 0.95rem;
+  margin: 0 0 1.8rem;
+}
+
+.fachada-ciclo {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  font-size: 0.95rem;
+}
+.fachada-ciclo li { display: flex; gap: 0.75rem; align-items: baseline; }
+.fachada-ciclo-n {
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--borda-forte);
+  min-width: 1.6em;
+}
+/* O 4º é o argumento do produto (a correção vira lição) — único em coral. */
+.fachada-ciclo li:last-child .fachada-ciclo-n { color: var(--coral); }
+
+.auth-painel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 1.5rem;
+}
+
+.auth-card {
+  width: min(420px, 100%);
+  background: var(--bg-2);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-g);
+  box-shadow: var(--sombra-2);
+  padding: 2.2rem 2rem;
+}
+
+.auth-titulo { font-family: var(--font-display); font-size: 1.6rem; }
+.auth-subtitulo { color: var(--text-1); font-size: 0.92rem; margin-bottom: 1.4rem; }
+.auth-troca { margin-top: 1.2rem; text-align: center; color: var(--text-1); font-size: 0.9rem; }
+
+@media (max-width: 860px) {
+  .auth-tela { grid-template-columns: 1fr; }
+  .auth-fachada { display: none; }
+}
+
+/* ---------- Grid de prédios ---------- */
+
+.campo-busca {
+  position: relative;
+  min-width: 260px;
+}
+.campo-busca svg {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-2);
+  pointer-events: none;
+}
+.campo-busca input { padding-left: 2.1rem; }
+
+.grid-predios {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 1.1rem;
+}
+
+/* ── O PRÉDIO DO CLIENTE (um por organização, andares dentro) ──────
+   Empilhado, não em grade: um cliente tem UM prédio, e uma grade de um item
+   só parece uma lista incompleta. Os andares é que se enfileiram dentro. */
+.lista-predios {
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+}
+
+.card-predio-completo {
+  /* Papel — mesma correção do .card-predio. */
+  background: var(--bg-2);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-g);
+  overflow: hidden;
+  box-shadow: var(--sombra-2);
+}
+
+.predio-fachada {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.2rem;
+  border-bottom: 1px solid var(--borda);
+  /* Mesma linguagem da fachada do card antigo: faixas horizontais = janelas. */
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(57, 46, 57, 0.05) 0 2px,
+    transparent 2px 18px
+  );
+}
+.predio-nome {
+  margin: 0;
+  font-size: 1.15rem;
+  color: var(--text-0);
+}
+.predio-sub {
+  margin: 0.15rem 0 0;
+  font-size: 0.85rem;
+  color: var(--text-2);
+}
+
+/* Os andares empilham de baixo para cima na leitura, mas a ordem visual é
+   alfabética — o "térreo" não significa nada aqui e inventar hierarquia entre
+   marketing e financeiro seria mentir sobre o produto. */
+.predio-andares {
+  display: flex;
+  flex-direction: column;
+}
+
+.andar-item {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.95rem 1.2rem;
+  color: var(--text-0);
+  border-bottom: 1px solid var(--borda);
+  transition: background var(--transicao), border-color var(--transicao);
+}
+.andar-item:last-child { border-bottom: none; }
+.andar-item:hover {
+  text-decoration: none;
+  color: var(--text-0);
+  background: color-mix(in srgb, var(--predio-acento) 8%, transparent);
+}
+
+.andar-icone {
+  font-size: 1.5rem;
+  line-height: 1;
+  width: 2.4rem;
+  height: 2.4rem;
+  display: grid;
+  place-items: center;
+  border-radius: var(--raio-m);
+  background: color-mix(in srgb, var(--predio-acento) 14%, transparent);
+  flex-shrink: 0;
+}
+
+.andar-texto {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+.andar-nome { font-weight: 600; }
+.andar-descricao {
+  font-size: 0.85rem;
+  color: var(--text-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.andar-estado {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+.andar-quando {
+  font-size: 0.8rem;
+  color: var(--text-2);
+}
+
+.predio-crescer {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.85rem 1.2rem;
+  font-size: 0.85rem;
+  color: var(--text-2);
+  background: color-mix(in srgb, var(--borda) 22%, transparent);
+}
+.predio-crescer > span:first-child {
+  font-size: 1.1rem;
+  line-height: 1;
+  opacity: 0.6;
+}
+
+@media (max-width: 560px) {
+  /* No celular a descrição do andar e o "quando" competem pela mesma linha e
+     as duas ficam ilegíveis; some com o que é redundante. */
+  .andar-descricao,
+  .andar-quando { display: none; }
+}
+
+.card-predio {
+  display: flex;
+  flex-direction: column;
+  /* Papel. Este gradiente translúcido era `rgba(255,253,252)` →
+     `rgba(250,244,244)`: creme ROSADO da identidade anterior, meio
+     transparente, frostando o fundo. Sobre o creme atual (#f4efe6) ele dava
+     um cartão de tom levemente diferente do resto do app — o tipo de deriva
+     que ninguém vê de propósito e todo mundo sente. */
+  background: var(--bg-2);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-g);
+  overflow: hidden;
+  color: var(--text-0);
+  box-shadow: var(--sombra-2);
+  transition: transform var(--transicao), border-color var(--transicao), box-shadow var(--transicao);
+}
+.card-predio:hover {
+  text-decoration: none;
+  color: var(--text-0);
+  transform: translateY(-3px);
+  border-color: color-mix(in srgb, var(--predio-acento) 55%, transparent);
+  box-shadow: var(--sombra-2), inset 0 1px 0 rgba(255, 255, 255, 0.65);
+}
+
+.badge-nao-lidas {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  /* coral = "precisa de você" — notificação é exatamente isso */
+  background: var(--coral);
+  color: var(--coral-ink);
+  font-size: 0.72rem;
+  font-weight: 700;
+  border-radius: 999px;
+  min-width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+  box-shadow: var(--sombra-1);
+  animation: badge-pop 260ms cubic-bezier(0.2, 0.8, 0.3, 1.3);
+}
+
+/* ---------- Status pills ---------- */
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  /* A pílula virou flex container quando o ícone de traço entrou (14/08/2026):
+     sem `gap`, o espaço solto entre <Icone> e rótulo COLAPSA e o desenho cola
+     na palavra ("⏸Standby"). O gap é o espaço que o texto perdeu. */
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  padding: 0.12rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+/* Vocabulário de estado da marca: lavanda = fila/pensando, AZUL = executando
+   (vivo), CORAL = precisa de você (HITL), sage = evidência de concluído. */
+.status-queued { color: var(--info); background: color-mix(in srgb, var(--info) 12%, transparent); border-color: color-mix(in srgb, var(--info) 30%, transparent); }
+/* A TINTA do selo não é a cor do estado: é a variante escura dela (09/09/2026).
+   Medido no tema claro, que é o padrão: 'concluído' dava #1e9e63 sobre #e4f3ec
+   = 2,99:1 e 'aguardando você' dava #ef5b43 sobre #ffedea = 2,97:1 — os dois
+   reprovam o AA de 4,5:1, num texto de 11px em maiúsculas, que é justamente o
+   sinal que o dono lê de relance para decidir. Com as tintas: 6,2:1 e 6,1:1.
+   No escuro, --link e --ok-ink clareiam e a conta continua fechando. */
+.status-running { color: var(--link); background: color-mix(in srgb, var(--accent) 10%, transparent); border-color: color-mix(in srgb, var(--accent) 30%, transparent); }
+.status-done { color: var(--ok-ink); background: color-mix(in srgb, var(--ok) 12%, transparent); border-color: color-mix(in srgb, var(--ok) 30%, transparent); }
+.status-failed { color: var(--erro); background: color-mix(in srgb, var(--erro) 12%, transparent); border-color: color-mix(in srgb, var(--erro) 30%, transparent); }
+.status-cancelled { color: var(--text-2); background: var(--hover); border-color: var(--borda); }
+/* Entrega aguardando o SEU ok = o portão HITL — coral, a regra número 1. */
+.entrega-pendente { color: var(--coral-ink-forte); background: color-mix(in srgb, var(--coral) 12%, transparent); border-color: color-mix(in srgb, var(--coral) 32%, transparent); }
+.entrega-aprovada { color: var(--ok-ink); background: color-mix(in srgb, var(--ok) 12%, transparent); border-color: color-mix(in srgb, var(--ok) 30%, transparent); }
+.entrega-rejeitada { color: var(--erro); background: color-mix(in srgb, var(--erro) 12%, transparent); border-color: color-mix(in srgb, var(--erro) 30%, transparent); }
+
+/* ---------- Estado vazio ---------- */
+
+.estado-vazio {
+  text-align: center;
+  padding: 3.5rem 1.5rem;
+  border: 1px dashed var(--borda-forte);
+  border-radius: var(--raio-g);
+  max-width: 560px;
+  margin: 2rem auto;
+}
+.estado-vazio.compacto { padding: 1.8rem 1.2rem; margin: 0.6rem 0; max-width: none; }
+/* A arte do estado vazio: antes um emoji de 2.6rem, agora o ícone de traço.
+   Ele entra APAGADO de propósito — tela vazia é informação calma, não alarme;
+   e a `font-size` fica porque as telas que ainda não migraram usam glifo. */
+.estado-vazio-arte {
+  font-size: 2.6rem;
+  line-height: 1;
+  margin-bottom: 0.6rem;
+  color: var(--text-2);
+  opacity: 0.7;
+}
+.estado-vazio-arte svg { display: inline-block; }
+/* Estado vazio que ocupa a página inteira (conta sem escritório nenhum). */
+.estado-vazio--pagina { min-height: 70vh; display: grid; align-content: center; }
+.estado-vazio h2 { font-size: 1.15rem; }
+.estado-vazio p { color: var(--text-1); font-size: 0.92rem; max-width: 46ch; margin-inline: auto; }
+
+.predio-breadcrumb {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  font-size: 0.82rem;
+  color: var(--text-2);
+  margin-bottom: 0.7rem;
+}
+.predio-breadcrumb a { color: var(--text-1); }
+
+/* executando = AZUL vivo (verde nunca comemora); fila = lavanda. */
+@keyframes live-chip-pulse {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 50%, transparent); }
+  70% { box-shadow: 0 0 0 6px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+
+.abas {
+  display: flex;
+  gap: 0.2rem;
+  margin-top: 1.1rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.abas::-webkit-scrollbar { display: none; }
+
+.aba {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-1);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 0.6rem 1rem;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: color var(--transicao), border-color var(--transicao);
+}
+.aba:hover { color: var(--text-0); }
+.aba.ativa {
+  color: var(--predio-acento);
+  border-bottom-color: var(--predio-acento);
+}
+
+.predio-corpo { min-height: 340px; }
+
+/* ---------- Cânon: medidor de tokens + editor por seções ---------- */
+
+.canon-secao {
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-m);
+  padding: 0.55rem 0.8rem;
+  background: var(--bg-2);
+}
+.canon-secao summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+/* pill de tokens dentro do summary (Cânon/Marca recolhidos por padrão) */
+.canon-secao summary .status-pill {
+  margin-left: 0.55rem;
+  vertical-align: middle;
+}
+.canon-secao[open] summary { margin-bottom: 0.6rem; }
+.canon-secao .canon-textarea { min-height: 0; }
+
+/* ---------- Clientes: seção standby recolhível ---------- */
+
+.standby-secao {
+  margin-top: 1.4rem;
+  border-top: 1px dashed var(--borda);
+  padding-top: 0.9rem;
+}
+.standby-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: none;
+  border: 0;
+  color: var(--text-2);
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+.standby-toggle:hover { color: var(--text-0); }
+.standby-mais {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  border: 1px solid var(--borda);
+  border-radius: 6px;
+  font-weight: 700;
+}
+.standby-secao .caso-card { opacity: 0.65; }
+
+/* ---------- Clientes: detalhe em grupos recolhíveis ---------- */
+
+.cliente-grupos { display: flex; flex-direction: column; gap: 0.55rem; }
+.cliente-grupo {
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-m);
+  padding: 0.55rem 0.8rem;
+  background: var(--bg-2);
+}
+.cliente-grupo summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+.cliente-grupo[open] > summary { margin-bottom: 0.6rem; }
+.cliente-grupo-resumo {
+  margin-left: 0.55rem;
+  color: var(--text-2);
+  font-weight: 400;
+  font-size: 0.8rem;
+}
+.cliente-grupo-periodos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  margin-top: 0.7rem;
+}
+.cliente-grupo-rodape { margin: 0.6rem 0 0; }
+
+/* Histórico de entregas do cliente (linhas: quando · nome · status · canal) */
+.entregas-cliente-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.entregas-cliente-lista li {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  padding: 0.4rem 0;
+  border-bottom: 1px dashed color-mix(in srgb, var(--borda) 60%, transparent);
+}
+.entregas-cliente-lista li:last-child { border-bottom: 0; }
+.entregas-cliente-quando {
+  color: var(--text-2);
+  font-size: 0.8rem;
+  white-space: nowrap;
+  min-width: 6.5rem;
+}
+.entregas-cliente-nome {
+  flex: 1;
+  min-width: 8rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.92rem;
+}
+/* Tag do canal da entrega: e-mail (newsletter/peça de e-mail) ou chat */
+.canal-email { color: var(--info); background: color-mix(in srgb, var(--info) 12%, transparent); border-color: color-mix(in srgb, var(--info) 30%, transparent); }
+.canal-chat { color: var(--text-2); background: var(--hover); border-color: var(--borda); }
+
+/* ---------- Entregas por trabalho ---------- */
+
+.entregas-filtros {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+.entregas-filtro-cliente {
+  background: var(--bg-2);
+  color: var(--text-0);
+  border: 1px solid var(--borda);
+  border-radius: 999px;
+  padding: 0.35rem 0.9rem;
+  font-size: 0.88rem;
+}
+.trabalho-cabecalho {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.9rem;
+  flex-wrap: wrap;
+}
+.trabalho-titulo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+.trabalho-titulo > strong { font-size: 1rem; }
+/* ---- Etapas do trabalho: um arquivo por linha, com leitor inline e
+   decisão/feedback individual (a lição fica amarrada à etapa certa) ---- */
+.trabalho-etapas {
+  margin-top: 0.7rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  list-style: none;
+  padding: 0;
+}
+.etapa-linha {
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-m);
+  background: color-mix(in srgb, var(--bg-3) 40%, var(--bg-2));
+  padding: 0.5rem 0.7rem;
+}
+.etapa-linha.etapa-aprovada { border-color: color-mix(in srgb, var(--ok, #2e9e6b) 40%, var(--borda)); }
+.etapa-linha.etapa-rejeitada { border-color: color-mix(in srgb, var(--perigo, #c0392b) 40%, var(--borda)); }
+.etapa-topo {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 0;
+}
+.etapa-topo .entrega-dados { flex: 1 1 auto; min-width: 0; }
+.etapa-acoes {
+  display: inline-flex;
+  gap: 0.35rem;
+  flex: none;
+  align-items: center;
+}
+.etapa-visor {
+  margin-top: 0.55rem;
+  border-top: 1px dashed var(--borda);
+  padding-top: 0.55rem;
+  max-height: 420px;
+  overflow: auto;
+}
+.trabalho-lapis { font-size: 0.85rem; opacity: 0.7; }
+.trabalho-lapis:hover { opacity: 1; }
+.trabalho-renomear {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+.trabalho-renomear input {
+  min-width: min(340px, 60vw);
+  padding: 0.35rem 0.55rem;
+  border-radius: var(--raio-s, 8px);
+  border: 1px solid var(--borda);
+  background: var(--bg-1);
+  color: var(--text-0);
+  font-size: 0.92rem;
+}
+
+.bastidores { margin-top: 0.6rem; }
+.bastidores summary {
+  cursor: pointer;
+  color: var(--text-2);
+  font-size: 0.85rem;
+}
+.bastidores[open] summary { margin-bottom: 0.5rem; }
+.bastidores-doc h4 {
+  font-size: 0.82rem;
+  margin: 0.5rem 0 0.25rem;
+  color: var(--text-0);
+}
+.bastidores-texto {
+  /* superfície de "máquina" em TINTA da marca (nunca preto puro) */
+  background: var(--tinta);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-s, 8px);
+  padding: 0.7rem 0.9rem;
+  font-size: 0.8rem;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 320px;
+  overflow-y: auto;
+  color: var(--text-1, var(--text-0));
+}
+
+/* Composer */
+
+.composer h3 { margin-bottom: 0.7rem; }
+
+.composer-textarea {
+  /* >=16px: abaixo disso o Safari do iPhone dá ZOOM na página inteira ao tocar
+     no campo, e o usuário fica preso numa página ampliada que ele não pediu. */
+  font-size: max(16px, 0.95rem);
+  line-height: 1.55;
+  min-height: 140px;
+}
+
+.seletor-esforco {
+  display: inline-flex;
+  background: var(--bg-1);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-s);
+  padding: 3px;
+  gap: 2px;
+}
+
+.esforco-opcao {
+  background: none;
+  border: none;
+  border-radius: calc(var(--raio-s) - 2px);
+  color: var(--text-1);
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.3rem 0.85rem;
+  cursor: pointer;
+  transition: background var(--transicao), color var(--transicao);
+}
+.esforco-opcao:hover { color: var(--text-0); }
+.esforco-opcao.ativa {
+  background: color-mix(in srgb, var(--predio-acento) 20%, var(--bg-3));
+  color: var(--predio-acento, var(--accent));
+}
+
+.lista-uploads { margin-top: 0.7rem; display: flex; flex-direction: column; gap: 0.3rem; }
+
+.upload-item {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  font-size: 0.82rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: var(--raio-s);
+  background: var(--bg-1);
+  border: 1px solid var(--borda);
+}
+.upload-nome { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.upload-tamanho { color: var(--text-2); flex-shrink: 0; }
+.upload-estado { margin-left: auto; min-width: 0; overflow-wrap: anywhere; color: var(--text-2); }
+.upload-item > button { flex-shrink: 0; }
+.upload-ok .upload-estado { color: var(--ok); }
+.upload-erro .upload-estado { color: var(--erro); }
+.upload-enviando .upload-estado { color: var(--aviso); }
+
+.stream-wrapper { position: relative; }
+
+.stream-ir-fim {
+  position: absolute;
+  bottom: 0.9rem;
+  right: 1rem;
+  background: var(--bg-elevado);
+  border: 1px solid var(--borda-forte);
+  border-radius: 999px;
+  color: var(--text-0);
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.35rem 0.9rem;
+  cursor: pointer;
+  box-shadow: var(--sombra-2);
+  transition: border-color var(--transicao), background var(--transicao);
+  animation: toast-entra 180ms ease-out;
+}
+.stream-ir-fim:hover {
+  border-color: var(--predio-acento, var(--accent));
+  background: var(--bg-3);
+}
+
+.stream {
+  background: var(--bg-0);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-m);
+  padding: 1rem 1.1rem;
+  max-height: 56vh;
+  min-height: 220px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.55rem;
+}
+
+.stream-info {
+  color: var(--text-2);
+  font-size: 0.82rem;
+  font-style: italic;
+  margin: 0;
+}
+
+.stream-texto {
+  background: var(--bg-2);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-m);
+  border-top-left-radius: 4px;
+  padding: 0.7rem 0.95rem;
+  font-size: 0.92rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-width: 100%;
+}
+
+.stream-tool {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--text-2);
+  margin: 0;
+  padding-left: 0.3rem;
+  overflow-wrap: anywhere;
+}
+/* O sinal da ação (era emoji dentro da frase, "📄 lendo x.md"): traço em
+   currentColor, então ele acinzenta junto com a linha em vez de ficar
+   colorido no meio de um log em fonte mono. */
+.stream-tool-icone { vertical-align: -0.18em; margin-right: 5px; opacity: 0.8; }
+.stream-tool-resumo { color: var(--text-1); }
+
+.stream-tools-plano {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  max-width: 100%;
+}
+
+.stream-tools {
+  max-width: 100%;
+  border-left: 2px solid var(--borda);
+  padding-left: 0.55rem;
+}
+.stream-tools summary {
+  cursor: pointer;
+  list-style: none;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--text-2);
+  user-select: none;
+  overflow-wrap: anywhere;
+  transition: color var(--transicao);
+}
+.stream-tools summary::-webkit-details-marker { display: none; }
+.stream-tools summary::before {
+  content: '▸';
+  display: inline-block;
+  margin-right: 0.4rem;
+  transition: transform var(--transicao);
+}
+.stream-tools[open] summary::before { transform: rotate(90deg); }
+.stream-tools summary:hover { color: var(--text-0); }
+.stream-tools-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-top: 0.35rem;
+}
+
+.botao-copiar {
+  display: block;
+  margin-top: 0.55rem;
+  background: none;
+  border: 1px solid var(--borda-forte);
+  border-radius: var(--raio-s);
+  color: var(--text-1);
+  font-size: 0.74rem;
+  font-weight: 600;
+  padding: 0.2rem 0.6rem;
+  cursor: pointer;
+  transition: color var(--transicao), border-color var(--transicao);
+}
+.botao-copiar:hover {
+  color: var(--text-0);
+  border-color: var(--predio-acento, var(--accent));
+}
+.botao-copiar.copiado {
+  color: var(--ok);
+  border-color: color-mix(in srgb, var(--ok) 55%, transparent);
+}
+
+.stream-cronometro {
+  font-variant-numeric: tabular-nums;
+  color: var(--text-1);
+}
+
+.chip-subagente {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: color-mix(in srgb, var(--predio-primaria) 35%, var(--bg-3));
+  border: 1px solid color-mix(in srgb, var(--predio-acento) 35%, var(--borda));
+  border-radius: 999px;
+  padding: 0.25rem 0.8rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.chip-ponto {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--text-2);
+}
+.chip-subagente.ativo .chip-ponto {
+  background: var(--predio-acento, var(--accent));
+  animation: pulso 1.2s ease-in-out infinite;
+}
+@keyframes pulso {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.75); }
+}
+
+.stream-resultado {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.1rem;
+  align-items: baseline;
+  background: color-mix(in srgb, var(--ok) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ok) 28%, transparent);
+  border-radius: var(--raio-m);
+  padding: 0.6rem 0.95rem;
+  font-size: 0.85rem;
+  width: 100%;
+}
+.stream-resultado strong { color: var(--ok); }
+.stream-resultado span { color: var(--text-1); }
+
+.stream-entrega {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  background: color-mix(in srgb, var(--predio-acento) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--predio-acento) 30%, transparent);
+  border-radius: var(--raio-m);
+  padding: 0.55rem 0.9rem;
+  font-size: 0.86rem;
+  width: 100%;
+}
+
+.stream-erro { width: 100%; }
+
+.stream-digitando {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-2);
+  font-size: 0.8rem;
+  margin: 0;
+}
+
+.cursor-piscando {
+  width: 8px;
+  height: 15px;
+  background: var(--predio-acento, var(--accent));
+  animation: piscar 1s steps(2) infinite;
+}
+@keyframes piscar {
+  50% { opacity: 0; }
+}
+
+/* ---------- Entregas ---------- */
+
+.entregas section { margin-bottom: 1.8rem; }
+
+.secao-titulo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.05rem;
+  margin-bottom: 0.7rem;
+}
+/* O ícone do título é flex item: sem isso ele ENCOLHE nos títulos que cortam
+   com reticências (.pecas-modal-titulo, .biblioteca-modal-cabecalho). O texto
+   pode encolher; o desenho, não. */
+.secao-titulo svg { flex: none; }
+
+/* O contador é o selo de "precisa de você" (pendentes no menu, em Entregas, em
+   Casos e em Clientes) — logo ele é ESTADO, e estado é vocabulário do Offiz, não
+   do cliente. Saiu da cor do prédio em 15/08/2026, quando a shell passou a
+   vestir a marca: numa marca bicolor ele virava prata sobre prata, e a lei da
+   paleta é que coral significa uma coisa só. */
+.contador {
+  background: var(--coral-suave);
+  color: var(--coral-ink-forte);
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 0.05rem 0.55rem;
+}
+
+.secao-cabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.lista-entregas { display: flex; flex-direction: column; gap: 0.7rem; }
+
+.entrega-card {
+  background: var(--bg-2);
+  border: 1px solid var(--borda);
+  border-left: 3px solid var(--aviso);
+  border-radius: var(--raio-m);
+  padding: 0.85rem 1rem;
+}
+
+.entrega-principal {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+}
+
+.entrega-icone { font-size: 1.5rem; }
+.entrega-dados { flex: 1; min-width: 200px; }
+.entrega-nome { display: block; font-size: 0.95rem; }
+.entrega-meta { color: var(--text-2); font-size: 0.78rem; }
+.entrega-acoes { display: flex; gap: 0.45rem; flex-wrap: wrap; }
+
+.entrega-feedback { margin-top: 0.7rem; }
+.entrega-feedback textarea { font-size: max(16px, 0.95rem); }
+.entrega-feedback-acoes {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.45rem;
+}
+
+/* ---------- Tabelas ---------- */
+
+.tabela-scroll { overflow-x: auto; margin-top: 0.6rem; }
+
+.tabela {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+.tabela th {
+  text-align: left;
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-2);
+  font-weight: 700;
+  padding: 0.5rem 0.7rem;
+  border-bottom: 1px solid var(--borda-forte);
+  white-space: nowrap;
+}
+.tabela td {
+  padding: 0.55rem 0.7rem;
+  border-bottom: 1px solid var(--borda);
+  vertical-align: middle;
+}
+.tabela tr:hover td { background: var(--hover); }
+.celula-feedback { max-width: 260px; color: var(--text-1); font-size: 0.82rem; }
+
+/* ---------- Sobre ---------- */
+
+.sobre { display: flex; flex-direction: column; gap: 1.1rem; }
+
+.cartao {
+  background: var(--bg-2);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-m);
+  padding: 1.2rem 1.3rem;
+}
+
+.sobre-detalhes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.9rem;
+  margin: 0.9rem 0 0;
+}
+.sobre-detalhes dt {
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-2);
+  font-weight: 700;
+  margin-bottom: 0.2rem;
+}
+.sobre-detalhes dd { margin: 0; font-size: 0.88rem; }
+
+.lista-arquivos { display: flex; flex-direction: column; gap: 0.25rem; margin-top: 0.4rem; }
+.lista-arquivos li {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.8rem;
+  padding: 0.4rem 0.6rem;
+  background: var(--bg-1);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-s);
+  font-size: 0.84rem;
+}
+.arquivo-nome { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.arquivo-tamanho { color: var(--text-2); flex-shrink: 0; }
+
+/* ---------- Config / Admin ---------- */
+
+.config-grid { display: flex; flex-direction: column; gap: 1.1rem; }
+
+.uso-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.8rem;
+  margin: 0.8rem 0;
+}
+
+.uso-card {
+  background: var(--bg-1);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-m);
+  padding: 0.9rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+.uso-card.destaque { border-color: color-mix(in srgb, var(--accent) 45%, transparent); }
+.uso-valor {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+.uso-card.destaque .uso-valor { color: var(--accent); }
+.uso-rotulo { color: var(--text-2); font-size: 0.78rem; }
+
+.admin-status-jobs { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.4rem; }
+
+.offices-checkboxes { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+.office-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: var(--bg-1);
+  border: 1px solid var(--borda);
+  border-radius: 999px;
+  padding: 0.35rem 0.9rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: border-color var(--transicao), background var(--transicao);
+}
+.office-check input { width: auto; margin: 0; accent-color: var(--accent); }
+.office-check.ativo {
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.chips-offices { display: inline-flex; flex-wrap: wrap; gap: 0.35rem; }
+
+.chip-office {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: var(--bg-3);
+  border: 1px solid var(--borda);
+  border-radius: 999px;
+  padding: 0.1rem 0.3rem 0.1rem 0.7rem;
+  font-size: 0.78rem;
+  font-family: var(--font-mono);
+}
+.chip-office button {
+  background: none;
+  border: none;
+  color: var(--text-2);
+  cursor: pointer;
+  font-size: 0.95rem;
+  line-height: 1;
+  padding: 0.05rem 0.3rem;
+  border-radius: 50%;
+}
+.chip-office button:hover { color: var(--erro); background: color-mix(in srgb, var(--erro) 12%, transparent); }
+
+.linha-conceder { display: inline-flex; gap: 0.4rem; align-items: center; }
+.linha-conceder select { width: auto; padding: 0.3rem 0.5rem; font-size: 0.82rem; }
+
+/* ---------- Toasts ---------- */
+
+.toasts {
+  position: fixed;
+  bottom: 1.1rem;
+  right: 1.1rem;
+  z-index: 120;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: min(380px, calc(100vw - 1.6rem));
+  pointer-events: none;
+}
+
+.toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  background: var(--bg-elevado);
+  border: 1px solid var(--borda-forte);
+  border-left: 3px solid var(--info);
+  border-radius: var(--raio-m);
+  padding: 0.65rem 0.75rem;
+  font-size: 0.87rem;
+  box-shadow: var(--sombra-2);
+  animation: toast-entra 200ms cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+.toast-ok { border-left-color: var(--ok); }
+.toast-ok .toast-icone { color: var(--ok); }
+.toast-erro { border-left-color: var(--erro); }
+.toast-erro .toast-icone { color: var(--erro); }
+.toast-info .toast-icone { color: var(--info); }
+
+.toast-icone { font-weight: 700; line-height: 1.4; flex-shrink: 0; }
+.toast-texto { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.toast-fechar {
+  background: none;
+  border: none;
+  color: var(--text-2);
+  font-size: 1.05rem;
+  line-height: 1;
+  padding: 0.1rem 0.2rem;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.toast-fechar:hover { color: var(--text-0); }
+
+.toast-saindo {
+  animation: toast-sai 220ms ease-in forwards;
+}
+
+@keyframes toast-entra {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes toast-sai {
+  to { opacity: 0; transform: translateY(8px); }
+}
+
+/* ---------- Entregas: rejeição / aprovação com aprendizado ---------- */
+
+.check-reexecutar {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  margin: 0.2rem 0 0.4rem;
+  cursor: pointer;
+  font-size: 0.86rem;
+}
+.check-reexecutar input {
+  width: auto;
+  margin: 0.2rem 0 0;
+  accent-color: var(--predio-acento, var(--accent));
+  flex-shrink: 0;
+}
+.check-reexecutar span { display: flex; flex-direction: column; }
+.check-reexecutar small { color: var(--text-2); font-size: 0.76rem; }
+
+.canon-textarea {
+  font-family: var(--font-mono);
+  font-size: 0.84rem;
+  line-height: 1.65;
+  min-height: 260px;
+  background: var(--bg-0);
+}
+.canon-textarea:read-only { color: var(--text-1); }
+
+.canon-rodape {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  margin-top: 0.2rem;
+  flex-wrap: wrap;
+}
+
+/* ============================================================
+   Fase 2 — Casos + Monitor (escritório jurídico)
+   ============================================================ */
+
+/* Alerta de aviso (âmbar) — reaproveitado em avisos de IA/degradação. */
+.alerta-aviso {
+  color: var(--aviso);
+  background: color-mix(in srgb, var(--aviso) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--aviso) 30%, transparent);
+}
+
+.check-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  color: var(--text-1);
+  cursor: pointer;
+}
+.check-inline input { width: auto; }
+
+/* ---------- Barra de filtros (casos e monitor) ---------- */
+
+.casos-barra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1.1rem;
+}
+.casos-barra .campo-busca { flex: 1 1 240px; }
+.casos-barra select { flex: 0 1 auto; width: auto; }
+.casos-barra .botao-primario { margin-left: auto; }
+.monitor-barra { align-items: flex-start; }
+.monitor-barra > div { flex: 1 1 260px; }
+.monitor-barra .secao-titulo { margin-bottom: 0.15rem; }
+
+/* ---------- Grid de casos ---------- */
+
+.casos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 0.9rem;
+}
+
+.caso-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  text-align: left;
+  background: var(--bg-2);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-m);
+  padding: 0.9rem 1rem;
+  color: var(--text-0);
+  cursor: pointer;
+  transition: border-color var(--transicao), transform var(--transicao), box-shadow var(--transicao);
+}
+.caso-card:hover {
+  border-color: var(--borda-forte);
+  transform: translateY(-2px);
+  box-shadow: var(--sombra-2);
+}
+.caso-card-topo {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+.caso-card-nome { font-size: 1rem; font-family: var(--font-display); }
+.caso-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--text-2);
+  align-items: center;
+}
+.caso-area {
+  color: var(--accent);
+  font-weight: 600;
+}
+.caso-card-processo {
+  font-size: 0.78rem;
+  color: var(--text-1);
+  background: var(--bg-1);
+  padding: 0.15rem 0.4rem;
+  border-radius: var(--raio-s);
+  align-self: flex-start;
+}
+.caso-card-prazo {
+  font-size: 0.82rem;
+  color: var(--text-1);
+  padding: 0.4rem 0.55rem;
+  background: color-mix(in srgb, var(--aviso) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--aviso) 26%, transparent);
+  border-radius: var(--raio-s);
+}
+.caso-card-prazo strong { color: var(--text-0); }
+
+/* ---------- Dropzone (novo caso) ---------- */
+
+.dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1.6rem 1rem;
+  margin: 0.9rem 0;
+  border: 1.5px dashed var(--borda-forte);
+  border-radius: var(--raio-m);
+  background: var(--bg-1);
+  color: var(--text-1);
+  cursor: pointer;
+  text-align: center;
+  transition: border-color var(--transicao), background var(--transicao);
+}
+.dropzone:hover,
+.dropzone:focus-visible {
+  border-color: var(--accent);
+  outline: none;
+}
+.dropzone.arrastando {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, var(--bg-1));
+}
+.dropzone-icone { font-size: 1.8rem; }
+.dropzone-texto { font-size: 0.9rem; }
+.dropzone-texto u { cursor: pointer; }
+
+.caso-arquivos-preview { margin-top: 0.4rem; }
+.caso-form-extrair {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+  margin: 0.6rem 0 0.4rem;
+}
+
+/* ---------- Formulário de caso ---------- */
+
+.caso-form-campos { margin-top: 1rem; }
+.caso-form-rodape {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  margin-top: 0.6rem;
+}
+
+/* Badge de confiança (autofill por IA) */
+.confianca-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  margin-left: 0.5rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  padding: 0.05rem 0.4rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  vertical-align: middle;
+}
+.confianca-alta {
+  color: var(--ok);
+  background: color-mix(in srgb, var(--ok) 14%, transparent);
+  border-color: color-mix(in srgb, var(--ok) 32%, transparent);
+}
+.confianca-media {
+  color: var(--aviso);
+  background: color-mix(in srgb, var(--aviso) 14%, transparent);
+  border-color: color-mix(in srgb, var(--aviso) 32%, transparent);
+}
+.confianca-baixa {
+  color: var(--text-2);
+  background: var(--hover);
+  border-color: var(--borda);
+}
+
+/* ---------- Detalhe do caso ---------- */
+
+.caso-detalhe { display: flex; flex-direction: column; gap: 1rem; }
+.caso-detalhe-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+.caso-detalhe-cabecalho {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.caso-detalhe-sub { margin: 0.2rem 0 0; }
+.caso-status-select { margin-bottom: 0; min-width: 180px; }
+.caso-status-select select { width: 100%; }
+
+.caso-prazos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  margin: 0.9rem 0;
+}
+.caso-prazo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.6rem 0.8rem;
+  border-radius: var(--raio-s);
+  min-width: 180px;
+}
+.caso-prazo-destaque {
+  background: color-mix(in srgb, var(--aviso) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--aviso) 26%, transparent);
+}
+.caso-prazo-rotulo {
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--text-1);
+}
+.caso-prazo strong { font-size: 1rem; }
+.caso-descricao {
+  margin: 0.6rem 0 0;
+  font-size: 0.92rem;
+  color: var(--text-1);
+  white-space: pre-wrap;
+}
+.caso-docs li { align-items: center; }
+.caso-doc-meta { display: inline-flex; align-items: center; gap: 0.5rem; flex-shrink: 0; }
+
+/* ---------- Monitor ---------- */
+
+.monitor-layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 360px) 1fr;
+  gap: 1.1rem;
+  align-items: start;
+}
+.monitor-processos { display: flex; flex-direction: column; gap: 0.7rem; }
+
+.monitor-card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-m);
+  background: var(--bg-2);
+  overflow: hidden;
+  transition: border-color var(--transicao);
+}
+.monitor-card.selecionado { border-color: var(--accent); }
+.monitor-card-corpo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  text-align: left;
+  padding: 0.8rem 0.9rem;
+  color: var(--text-0);
+  cursor: pointer;
+  background: transparent;
+}
+.monitor-card-corpo:hover { background: var(--hover); }
+.monitor-card-topo {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  align-items: flex-start;
+}
+.monitor-card-apelido { font-size: 0.94rem; font-family: var(--font-display); }
+.monitor-card-cnj { font-size: 0.76rem; color: var(--text-2); }
+.monitor-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  font-size: 0.78rem;
+  color: var(--text-2);
+}
+.monitor-tribunal {
+  color: var(--info);
+  font-weight: 600;
+}
+.monitor-badge-naolidos {
+  color: var(--accent-ink);
+  background: var(--accent);
+  font-weight: 700;
+  font-size: 0.72rem;
+  padding: 0.05rem 0.4rem;
+  border-radius: 999px;
+}
+.monitor-card-acoes {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem 0.9rem;
+  border-top: 1px solid var(--borda);
+  background: var(--bg-1);
+}
+.monitor-ver-todos { align-self: flex-start; margin-bottom: 0.2rem; }
+
+/* Prioridade (pills) */
+.prioridade-alta {
+  color: var(--erro);
+  background: color-mix(in srgb, var(--erro) 12%, transparent);
+  border-color: color-mix(in srgb, var(--erro) 30%, transparent);
+}
+.prioridade-media {
+  color: var(--aviso);
+  background: color-mix(in srgb, var(--aviso) 12%, transparent);
+  border-color: color-mix(in srgb, var(--aviso) 30%, transparent);
+}
+.prioridade-baixa {
+  color: var(--text-2);
+  background: var(--hover);
+  border-color: var(--borda);
+}
+
+/* Adicionar processo */
+.monitor-cnj-linha { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.monitor-cnj-linha input { flex: 1 1 220px; font-family: var(--font-mono); }
+.monitor-lookup {
+  margin: 0.6rem 0;
+  padding: 0.7rem 0.9rem;
+  border-radius: var(--raio-s);
+  border: 1px solid var(--borda);
+  background: var(--bg-1);
+}
+.monitor-lookup.ok { border-color: color-mix(in srgb, var(--ok) 30%, transparent); }
+.monitor-lookup.vazio { border-color: color-mix(in srgb, var(--aviso) 30%, transparent); }
+.monitor-lookup.erro { border-color: color-mix(in srgb, var(--erro) 35%, transparent); }
+.monitor-lookup-titulo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin: 0;
+  font-size: 0.88rem;
+}
+.monitor-lookup-movs {
+  list-style: none;
+  margin: 0.6rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.monitor-lookup-movs li {
+  display: flex;
+  gap: 0.6rem;
+  font-size: 0.8rem;
+}
+.mov-data { color: var(--text-2); flex-shrink: 0; min-width: 130px; }
+.mov-nome { color: var(--text-1); }
+
+/* Timeline de eventos */
+.monitor-timeline-acoes { display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap; }
+.monitor-timeline { list-style: none; margin: 0.6rem 0 0; padding: 0; }
+.evento-item {
+  position: relative;
+  display: flex;
+  gap: 0.7rem;
+  padding: 0 0 1rem 0;
+}
+.evento-item:not(:last-child) .evento-marca::after {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 14px;
+  bottom: -4px;
+  width: 2px;
+  background: var(--borda);
+}
+.evento-marca {
+  position: relative;
+  flex-shrink: 0;
+  width: 12px;
+  height: 12px;
+  margin-top: 3px;
+  border-radius: 50%;
+  background: var(--text-2);
+}
+.evento-critico .evento-marca { background: var(--erro); }
+.evento-importante .evento-marca { background: var(--aviso); }
+.evento-normal .evento-marca { background: var(--text-2); }
+.evento-item.lido { opacity: 0.62; }
+.evento-conteudo { flex: 1; display: flex; flex-direction: column; gap: 0.25rem; }
+.evento-topo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  font-size: 0.78rem;
+  color: var(--text-2);
+}
+.evento-processo { font-weight: 600; color: var(--text-1); }
+.evento-marcar { margin-left: auto; }
+.evento-titulo { font-size: 0.92rem; }
+.evento-descricao { margin: 0; font-size: 0.84rem; color: var(--text-1); }
+
+.importancia-critico {
+  color: var(--erro);
+  background: color-mix(in srgb, var(--erro) 12%, transparent);
+  border-color: color-mix(in srgb, var(--erro) 30%, transparent);
+}
+.importancia-importante {
+  color: var(--aviso);
+  background: color-mix(in srgb, var(--aviso) 12%, transparent);
+  border-color: color-mix(in srgb, var(--aviso) 30%, transparent);
+}
+.importancia-normal {
+  color: var(--text-2);
+  background: var(--hover);
+  border-color: var(--borda);
+}
+
+/* ============================================================
+   Fase 3 — Painéis (Conteúdo e Financeiro)
+   ============================================================ */
+
+.paineis { gap: 1.2rem; }
+
+/* ---------- Responsivo ---------- */
+
+@media (max-width: 640px) {
+  .topbar-inner { padding: 0.55rem 0.8rem; gap: 0.8rem; }
+  .topbar-inner { flex-wrap: wrap; }
+  .topbar-nav { order: 3; flex-basis: 100%; flex-wrap: wrap; }
+  .topbar-direita { margin-left: auto; gap: 0.6rem; }
+  .usuario-info { display: none; }
+  .pagina { padding: 1.1rem 0.8rem 2.2rem; }
+  .linha-campos { grid-template-columns: 1fr; }
+  .stream { padding: 0.75rem 0.7rem; }
+  .entrega-acoes { width: 100%; justify-content: flex-end; }
+  .canon-rodape { flex-direction: column; align-items: stretch; }
+  .canon-rodape .botao { justify-content: center; }
+  .monitor-layout { grid-template-columns: 1fr; }
+  .casos-barra .botao-primario { margin-left: 0; width: 100%; justify-content: center; }
+  .casos-barra select { flex: 1 1 auto; width: 100%; }
+  .caso-detalhe-cabecalho { flex-direction: column; }
+  .caso-status-select { width: 100%; }
+}
+
+@media (max-width: 900px) {
+  .monitor-layout { grid-template-columns: 1fr; }
+}
+
+/* ---------- Movimento reduzido ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ---------- Alternador de tema (claro/escuro) ---------- */
+
+.toggle-tema {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--raio-s);
+  border: 1px solid var(--borda);
+  background: transparent;
+  color: var(--text-1);
+  cursor: pointer;
+  transition: color var(--transicao), background var(--transicao), border-color var(--transicao);
+}
+.toggle-tema:hover {
+  color: var(--accent);
+  background: var(--hover);
+  border-color: var(--borda-forte);
+}
+.toggle-tema svg { display: block; }
+
+/* Variante flutuante — telas de auth (login/registro) e landing sem header próprio */
+.toggle-tema-flutuante {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 50;
+  background: var(--bg-2);
+  border: 1px solid var(--borda);
+  box-shadow: var(--sombra-1);
+}
+
+/* Marca flutuante que volta para a home — telas de auth (login/registro) */
+.auth-brand-flutuante {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 50;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.38rem 0.78rem 0.38rem 0.5rem;
+  border-radius: 999px;
+  background: var(--bg-2);
+  border: 1px solid var(--borda);
+  box-shadow: var(--sombra-1);
+  color: var(--text-0);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.02rem;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  transition: opacity var(--transicao);
+}
+.auth-brand-flutuante:hover {
+  opacity: 0.82;
+  color: var(--text-0);
+  text-decoration: none;
+}
+
+/* ---------- Assinatura "by Adamá" (co-marca) ---------- */
+
+.assinatura-adama {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.34em;
+  font-family: var(--font-display);
+  line-height: 1;
+  white-space: nowrap;
+}
+.aa-por {
+  font-size: 0.72em;
+  font-weight: 500;
+  color: var(--text-1);
+}
+.aa-nome {
+  font-weight: 700;
+  color: var(--text-1);
+  letter-spacing: -0.01em;
+  text-transform: lowercase; /* lei da marca: o wordmark é todo minúsculo */
+}
+/* O "á" final: a CUNHA (trapézio retângulo sólido) por cima do a — o gesto
+   atômico da marca no lugar do acento agudo comum. */
+.aa-a-final {
+  position: relative;
+  display: inline-block;
+}
+.aa-cunha {
+  position: absolute;
+  top: -0.42em;
+  left: 0.08em;
+  width: 0.52em;
+  height: 0.34em;
+  background: var(--accent);
+  clip-path: polygon(0 100%, 100% 100%, 100% 0, 38% 28%);
+}
+
+/* Marca "Offiz by Adamá" na fachada das telas de auth */
+.fachada-marca {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.42rem;
+}
+.fachada-marca-nome {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.15rem;
+  color: var(--text-0);
+}
+
+/* ---------- Convites por e-mail & assentos (venda por assento) ---------- */
+
+/* Medidor "X de Y assentos em uso" na seção Membros da config da org */
+.assentos-medidor {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+  margin: 0.15rem 0 0.9rem;
+}
+.assentos-barra {
+  display: flex;
+  flex: 0 0 150px;
+  height: 8px;
+  border-radius: 999px;
+  border: 1px solid var(--borda);
+  background: var(--hover);
+  overflow: hidden;
+}
+.assentos-barra-usados {
+  height: 100%;
+  background: var(--accent);
+}
+.assentos-barra-pendentes {
+  height: 100%;
+  background: color-mix(in srgb, var(--aviso) 65%, transparent);
+}
+/* Assentos presos por remoção recente (quarentena anti-rotação) — tom de
+   vermelho claro, mais fraco que erro: é reserva, não problema. */
+.assentos-barra-quarentena {
+  height: 100%;
+  background: color-mix(in srgb, var(--erro) 35%, transparent);
+}
+.assentos-texto { font-size: 0.85rem; color: var(--text-1); }
+.assentos-texto strong { color: var(--text-0); }
+
+/* ---------- Personalização white-label (config da org) ---------- */
+
+/* Um bloco expansível por prédio da organização */
+.pers-bloco {
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-s);
+  margin-top: 0.6rem;
+}
+.pers-bloco-cabecalho {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.6rem 0.8rem;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  text-align: left;
+  color: var(--text-0);
+  font: inherit;
+}
+.pers-bloco-cabecalho:hover { background: var(--hover); }
+.pers-bloco-seta { margin-left: auto; color: var(--text-1); font-weight: 600; }
+/* Preview simples da cor primária efetiva do prédio */
+.pers-swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  border: 1px solid var(--borda);
+  flex: none;
+}
+.pers-bloco-corpo {
+  padding: 0.7rem 0.8rem 0.9rem;
+  border-top: 1px solid var(--borda);
+}
+.pers-cores { display: flex; gap: 0.8rem; flex-wrap: wrap; }
+.pers-cor-inputs { display: flex; align-items: center; gap: 0.4rem; }
+.pers-cor-inputs input[type='color'] {
+  width: 38px;
+  height: 32px;
+  padding: 2px;
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-s);
+  background: var(--hover);
+  cursor: pointer;
+}
+.pers-cor-inputs input[type='text'] {
+  max-width: 110px;
+  font-family: var(--font-mono);
+}
+
+/* ---------- Tarefas prontas do cliente (Administração) ---------- */
+
+.tp-seletores { align-items: flex-end; flex-wrap: wrap; gap: 0.8rem; margin: 0.6rem 0 0.2rem; }
+.tp-seletores select { min-width: 180px; }
+
+/* ---------- Criador de escritórios (/criador) ---------- */
+
+/* Duas colunas: conversa | preview+publicação. O preview leva a folga — é o
+   produto que se está olhando; a conversa é o volante. */
+.criador-grid {
+  display: grid;
+  grid-template-columns: minmax(360px, 42%) 1fr;
+  gap: 1rem;
+  align-items: stretch;
+  height: calc(100vh - 150px);
+  min-height: 480px;
+}
+@media (max-width: 1000px) {
+  .criador-grid { grid-template-columns: 1fr; height: auto; }
+  /* Especificidade acima da regra base (que zera min-height para o grid
+     largo): empilhada, a conversa precisa de altura própria. */
+  .criador-grid .criador-conversa { min-height: 60vh; }
+  .criador-grid .pv-janela { min-height: 50vh; }
+}
+
+.criador-conversa {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 0.8rem;
+}
+.criador-conversa-topo {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid var(--borda);
+}
+.criador-conversa-topo .botao-texto { margin-left: auto; }
+
+.criador-mensagens {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  padding: 0.6rem 0.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+.criador-msg { max-width: 92%; border-radius: var(--raio-s); padding: 0.5rem 0.7rem; }
+.criador-msg p { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.criador-msg-consultor {
+  align-self: flex-end;
+  background: color-mix(in srgb, var(--primaria) 16%, transparent);
+}
+.criador-msg-criador { align-self: flex-start; background: var(--hover); }
+.criador-msg-erro {
+  align-self: stretch;
+  background: color-mix(in srgb, var(--erro) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--erro) 40%, transparent);
+}
+.criador-chips { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-bottom: 0.3rem; }
+.criador-chips code {
+  font-size: 0.72rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--primaria) 12%, transparent);
+  color: var(--text-1);
+}
+.criador-digitando { animation: pulso-suave 1.2s ease-in-out infinite; }
+@keyframes pulso-suave { 50% { opacity: 0.45; } }
+
+.criador-entrada { display: flex; gap: 0.5rem; align-items: flex-end; padding-top: 0.6rem; border-top: 1px solid var(--borda); }
+.criador-entrada textarea { flex: 1; resize: none; font-size: 0.9rem; }
+.criador-entrada-acoes { display: flex; flex-direction: column; gap: 0.35rem; }
+.criador-voz-ativa { animation: pulso-suave 1.1s ease-in-out infinite; }
+
+/* Anexos pendentes (vão citados na próxima mensagem) */
+.criador-anexos { display: flex; flex-wrap: wrap; gap: 0.35rem; padding-top: 0.5rem; }
+.criador-anexo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.75rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--primaria) 12%, transparent);
+}
+.criador-anexo button {
+  border: 0;
+  background: none;
+  color: var(--text-1);
+  cursor: pointer;
+  font: inherit;
+  padding: 0 0.1rem;
+}
+.criador-anexo button:hover { color: var(--erro); }
+
+.criador-download { margin-bottom: 1rem; }
+.criador-download .linha-conceder { margin-top: 0.5rem; }
+.criador-download a.botao { text-decoration: none; }
+
+.criador-lado-direito { display: flex; flex-direction: column; gap: 0.7rem; min-height: 0; }
+
+/* A "janela" do preview — moldura de navegador com o tema DO escritório */
+.pv-janela {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-s);
+  overflow: hidden;
+  background: var(--fundo-1, var(--hover));
+}
+.pv-chrome {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.7rem;
+  border-bottom: 1px solid var(--borda);
+  background: var(--hover);
+}
+.pv-chrome span { width: 10px; height: 10px; border-radius: 50%; background: var(--borda); }
+.pv-chrome em { margin-left: 0.5rem; font-size: 0.75rem; color: var(--text-1); font-style: normal; }
+.pv-corpo { flex: 1; display: flex; min-height: 0; }
+.pv-menu {
+  width: 200px;
+  flex: none;
+  overflow-y: auto;
+  padding: 0.6rem 0.45rem;
+  border-right: 1px solid var(--borda);
+  background: color-mix(in srgb, var(--pv-primaria) 7%, transparent);
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.pv-marca { font-weight: 700; font-size: 0.9rem; padding: 0.2rem 0.5rem 0.6rem; }
+.pv-item {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: none;
+  color: var(--text-0);
+  font: inherit;
+  font-size: 0.85rem;
+  padding: 0.4rem 0.55rem;
+  border-radius: var(--raio-s);
+  cursor: pointer;
+}
+.pv-item:hover { background: var(--hover); }
+.pv-item.ativo {
+  background: color-mix(in srgb, var(--pv-primaria) 22%, transparent);
+  font-weight: 600;
+}
+.pv-item-fixo { cursor: default; color: var(--text-1); }
+.pv-separador { border-top: 1px solid var(--borda); margin: 0.5rem 0.3rem; }
+.pv-area { flex: 1; overflow-y: auto; padding: 0.9rem 1rem; }
+.pv-ajuda { color: var(--text-1); font-size: 0.85rem; margin-top: 0; }
+.pv-escopo { margin: 0.9rem 0 0.4rem; font-size: 0.82rem; color: var(--text-1); text-transform: uppercase; letter-spacing: 0.04em; }
+.pv-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.5rem; }
+.pv-card {
+  border: 1px solid var(--borda);
+  border-left: 3px solid var(--pv-acento);
+  border-radius: var(--raio-s);
+  padding: 0.55rem 0.65rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.84rem;
+}
+.pv-card span { color: var(--text-1); font-size: 0.78rem; }
+.pv-painel-placeholder {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  text-align: center;
+}
+.pv-painel-placeholder > span { font-size: 2.2rem; }
+.pv-nota { max-width: 380px; font-size: 0.78rem; }
+
+/* Rodapé do lado direito: o que mudou + publicar/descartar */
+.criador-rodape {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+  padding: 0.7rem 0.9rem;
+}
+.criador-alterados { flex: 1; display: flex; flex-wrap: wrap; gap: 0.35rem; min-width: 200px; }
+.criador-alterado {
+  font-size: 0.75rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  background: var(--hover);
+}
+.criador-alterado-novo { color: var(--ok, #3fa96c); }
+.criador-alterado-removido { color: var(--erro); }
+
+/* ---------- Administração (gestão): filtros, paginação e a visão geral ---- */
+
+.admin-visao-topo { display: flex; align-items: center; gap: 0.8rem; flex-wrap: wrap; }
+.admin-visao-topo .secao-titulo { margin: 0; flex: 1; }
+.admin-filtro { margin: 0.4rem 0 0.7rem; flex-wrap: wrap; }
+.admin-filtro input[type='search'] { flex: 1 1 240px; min-width: 0; max-width: 380px; }
+.admin-cliente-endereco { display: block; margin-top: 4px; overflow-wrap: anywhere; }
+.admin-cliente-acoes summary { cursor: pointer; color: var(--accent); padding: 6px 0; }
+.admin-cliente-acoes .linha-conceder { flex-direction: column; align-items: stretch; padding: 8px 0; }
+.admin-novo-cliente .campo summary { cursor: pointer; padding: 6px 0; }
+@media (max-width: 700px) {
+  .admin-clientes-tabela, .admin-clientes-tabela tbody { display: block; width: 100%; }
+  .admin-clientes-tabela thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .admin-clientes-tabela tr { display: grid; padding: 10px 0; border-bottom: 1px solid var(--borda); }
+  .admin-clientes-tabela td { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; min-width: 0; border: 0; white-space: normal; }
+  .admin-clientes-tabela td::before { content: attr(data-label); color: var(--text-1); flex: 0 0 76px; }
+  .admin-clientes-tabela td > * { min-width: 0; overflow-wrap: anywhere; }
+  .admin-clientes-tabela .linha-conceder { flex-wrap: wrap; }
+}
+.admin-paginacao { margin-top: 0.7rem; justify-content: center; width: 100%; }
+
+/* Barra proporcional dos status de tarefa (a proporção se VÊ) */
+.admin-barra-status {
+  display: flex;
+  height: 10px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--hover);
+  margin: 0.9rem 0 0.6rem;
+}
+.admin-barra-fatia { min-width: 2px; }
+.status-cor-done { background: var(--ok, #3fa96c); }
+.status-cor-running { background: var(--primaria); }
+.status-cor-queued { background: color-mix(in srgb, var(--text-1) 45%, transparent); }
+.status-cor-failed { background: var(--erro); }
+.status-cor-cancelled { background: color-mix(in srgb, var(--text-1) 25%, transparent); }
+
+/* Pílula de status clicável (abre as tarefas daquele status) */
+.admin-pill-btn { cursor: pointer; border: 1px solid transparent; font: inherit; }
+.admin-pill-btn.aberto { border-color: currentColor; }
+
+/* A lista de tarefas do suporte (clique na pílula) + log por tarefa */
+.admin-jobs { margin-top: 0.7rem; display: flex; flex-direction: column; gap: 0.45rem; }
+.admin-job { border: 1px solid var(--borda); border-radius: var(--raio-s); padding: 0.4rem 0.6rem; }
+.admin-job-linha {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  width: 100%;
+  border: 0;
+  background: none;
+  color: var(--text-0);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  padding: 0.1rem 0;
+}
+.admin-job-prompt { flex: 1; min-width: 160px; color: var(--text-1); font-size: 0.82rem; }
+.admin-job-erro {
+  margin: 0.35rem 0 0;
+  font-size: 0.82rem;
+  color: var(--erro);
+  overflow-wrap: anywhere;
+}
+.admin-job-log { margin-top: 0.5rem; border-top: 1px solid var(--borda); padding-top: 0.5rem; }
+.admin-job-eventos {
+  max-height: 320px;
+  overflow: auto;
+  font-size: 0.78rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  background: var(--hover);
+  border-radius: var(--raio-s);
+  padding: 0.6rem;
+  margin: 0;
+}
+
+/* Catálogo em LISTA (com filtro e o raio de impacto de cada andar) */
+.criador-lista { display: flex; flex-direction: column; gap: 0.35rem; }
+.criador-linha-bloco { border: 1px solid var(--borda); border-radius: var(--raio-s); }
+.criador-linha { display: flex; align-items: center; gap: 0.5rem; padding-right: 0.6rem; }
+.criador-linha-abrir-area {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  border: 0;
+  background: none;
+  color: var(--text-0);
+  font: inherit;
+  text-align: left;
+  padding: 0.5rem 0.7rem;
+  cursor: pointer;
+  border-radius: var(--raio-s);
+  min-width: 0;
+}
+.criador-linha-abrir-area:hover { background: var(--hover); }
+.criador-versoes {
+  border-top: 1px solid var(--borda);
+  padding: 0.5rem 0.7rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.criador-versao { display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap; }
+.criador-linha-icone { font-size: 1.1rem; flex: none; }
+.criador-linha-nome { flex: 1; min-width: 220px; }
+.criador-linha-ativos { font-size: 0.8rem; white-space: nowrap; }
+.criador-linha-abrir { color: var(--primaria); font-size: 0.82rem; white-space: nowrap; }
+
+/* Lado direito da sessão: alternância Produto | Arquivos */
+.criador-lado-toggle { display: flex; gap: 0.4rem; }
+.pv-demo { margin-left: auto; }
+.pv-menu-arquivos { width: 240px; }
+.pv-arquivo-nome { overflow-wrap: anywhere; font-size: 0.78rem; }
+.pv-arquivo-titulo { margin: 0 0 0.5rem; }
+.pv-arquivo-conteudo {
+  font-size: 0.78rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  background: var(--hover);
+  border-radius: var(--raio-s);
+  padding: 0.7rem;
+  margin: 0;
+}
+
+/* Subtítulos internos da seção (Convidar por e-mail / Convites pendentes) */
+.secao-subtitulo { font-size: 0.95rem; margin-top: 1.4rem; }
+
+.convite-link-acao {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* Página pública /convite/:token (mesma moldura das telas de auth) */
+.convite-resumo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin: 0 0 1.1rem;
+  padding: 0.75rem 0.95rem;
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-s);
+  background: color-mix(in srgb, var(--bg-1) 70%, transparent);
+  font-size: 0.9rem;
+}
+.convite-resumo strong { color: var(--text-1); font-weight: 600; }
+.convite-dica-senha { margin: -0.45rem 0 0.9rem; font-size: 0.8rem; }
+
+/* ============================================================
+   Motor local EMBUTIDO (ponte window.offizMotor do app desktop)
+   — passos numerados na seção "Motor local" de ConfigOrg
+   ============================================================ */
+
+.motor-emb {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin: 0.7rem 0 1.1rem;
+}
+.motor-emb-passo {
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-s);
+  padding: 0.65rem 0.85rem;
+  background: color-mix(in srgb, var(--bg-1) 70%, transparent);
+}
+.motor-emb-passo-titulo {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+.motor-emb-passo-titulo strong { font-size: 0.92rem; }
+.motor-emb-passo .texto-suave { margin: 0.35rem 0 0; }
+/* Bolinha com o número do passo (1 parear → 4 ligar) */
+.motor-emb-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  flex: none;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+  color: var(--accent-forte);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+.motor-emb-acoes {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
+/* Log pequeno e rolável: instalações ao vivo e cauda do log do worker */
+.motor-emb-log {
+  margin: 0.5rem 0 0;
+  padding: 0.5rem 0.65rem;
+  max-height: 180px;
+  overflow: auto;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: color-mix(in srgb, var(--bg-0) 85%, transparent);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-s);
+  color: var(--text-1);
+}
+.motor-emb-deps {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.motor-emb-dep {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  font-size: 0.88rem;
+}
+/* O log ao vivo da dependência quebra para a linha de baixo, largura total */
+.motor-emb-dep .motor-emb-log { flex: 1 1 100%; }
+.motor-emb-dep-ok { color: var(--ok); font-weight: 700; }
+.motor-emb-dep-falta { color: var(--erro); font-weight: 700; }
+
+/* ============================================================
+   Aba CHAT AI — conversas multi-turno (lista à esquerda, thread
+   à direita), sem produzir entregas
+   ============================================================ */
+
+.conversa-layout {
+  display: grid;
+  grid-template-columns: minmax(230px, 300px) minmax(0, 1fr);
+  gap: 1.1rem;
+  align-items: start;
+}
+/* Com o PAINEL DA ENTREGA aberto o grid tem três colunas: histórico, conversa
+   e a peça. A conversa é a que cede espaço (minmax(0,1fr)) — encolher o painel
+   deixaria o vídeo 9:16 pequeno demais para julgar o resultado, que é a razão
+   de ele estar aqui. Abaixo de 1400px o histórico sai da linha: entre "ver as
+   conversas antigas" e "ver o vídeo que acabou de sair", ganha o vídeo. O corte
+   é 1400 e não 1200 porque o menu lateral da shell já come ~280px — medido em
+   1280px de janela, com 1200 a conversa ficava com 360px, apertada para ler. */
+.conversa-layout.com-painel {
+  grid-template-columns: minmax(200px, 250px) minmax(0, 1fr) 320px;
+}
+@media (max-width: 1400px) {
+  .conversa-layout.com-painel {
+    grid-template-columns: minmax(0, 1fr) 320px;
+  }
+  .conversa-layout.com-painel > .conversa-lista { display: none; }
+}
+@media (max-width: 900px) {
+  .conversa-layout { grid-template-columns: 1fr; }
+  .conversa-layout.com-painel { grid-template-columns: 1fr; }
+}
+
+/* ── Saúde do loop (Visão geral): aprovado de primeira vs. retrabalho ── */
+.dash-loop {
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-m);
+  background: var(--bg-2);
+  padding: 0.8rem 1rem;
+  display: grid;
+  gap: 0.55rem;
+}
+.dash-loop-topo {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+.dash-loop-numeros {
+  display: flex;
+  gap: 1.4rem;
+  flex-wrap: wrap;
+}
+.dash-loop-metrica {
+  display: grid;
+  gap: 0.1rem;
+}
+.dash-loop-metrica strong { font-size: 1.25rem; }
+.dash-loop-metrica span { font-size: 0.78rem; color: var(--text-2); }
+.dash-loop-alerta strong { color: var(--aviso, #d97706); }
+.dash-loop-tipos { margin: 0; font-size: 0.8rem; }
+
+/* O ID citável da tarefa — o endereço estável dela na conversa. */
+.painel-trabalho-id {
+  margin-left: 0.4rem;
+  font-size: 0.78rem;
+  color: var(--text-2);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.conversa-lista {
+  background: var(--bg-2);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-m);
+  padding: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  max-height: 72vh;
+  overflow-y: auto;
+}
+.conversa-lista-vazia { font-size: 0.85rem; margin: 0; }
+
+.conversa-itens {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.conversa-item-linha {
+  display: flex;
+  align-items: stretch;
+  gap: 0.25rem;
+}
+.conversa-item {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  text-align: left;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--raio-s);
+  padding: 0.5rem 0.6rem;
+  cursor: pointer;
+  transition: background var(--transicao), border-color var(--transicao);
+}
+.conversa-item:hover { background: var(--hover); }
+.conversa-item.selecionada {
+  background: color-mix(in srgb, var(--predio-acento, var(--accent)) 8%, transparent);
+  border-color: color-mix(in srgb, var(--predio-acento, var(--accent)) 40%, transparent);
+}
+.conversa-item-titulo {
+  font-weight: 600;
+  font-size: 0.86rem;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.conversa-item-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  font-size: 0.74rem;
+  color: var(--text-2);
+}
+.conversa-excluir {
+  flex: none;
+  align-self: center;
+  background: none;
+  border: none;
+  color: var(--text-2);
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: var(--raio-s);
+  transition: color var(--transicao), background var(--transicao);
+}
+.conversa-excluir:hover {
+  color: var(--erro);
+  background: color-mix(in srgb, var(--erro) 10%, transparent);
+}
+
+.conversa-painel {
+  background: var(--bg-2);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-m);
+  padding: 1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  min-height: 460px;
+}
+.conversa-contexto {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--text-1);
+  background: color-mix(in srgb, var(--predio-primaria, var(--bg-3)) 22%, var(--bg-2));
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-m);
+  padding: 0.45rem 0.8rem;
+}
+
+.conversa-thread {
+  flex: 1;
+  overflow-y: auto;
+  max-height: 56vh;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-right: 0.35rem;
+}
+.conversa-boasvindas {
+  margin: auto;
+  max-width: 46ch;
+  text-align: center;
+  padding: 1.5rem 0.5rem;
+}
+.conversa-grupo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+.conversa-bolha {
+  max-width: 82%;
+  padding: 0.6rem 0.85rem;
+  border-radius: var(--raio-m);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+/* SÓ o último balão entra com o rise da casa (8px/180ms). No balão novo é a
+   montagem que anima; e como os painéis da shell alternam por display:none —
+   que REINICIA animações CSS —, animar todo .conversa-bolha faria o histórico
+   inteiro re-fazer o fade a cada volta à aba. No último, o re-disparo é um
+   detalhe; na thread inteira, era ruído. */
+.conversa-grupo:last-child > .conversa-bolha:last-child {
+  animation: bolha-entra 180ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes bolha-entra { from { opacity: 0; transform: translateY(8px); } }
+.conversa-user {
+  align-self: flex-end;
+  background: color-mix(in srgb, var(--predio-acento, var(--accent)) 16%, var(--bg-3));
+  border: 1px solid color-mix(in srgb, var(--predio-acento, var(--accent)) 32%, transparent);
+  border-bottom-right-radius: var(--raio-s);
+}
+.conversa-ia {
+  align-self: flex-start;
+  background: var(--bg-1);
+  border: 1px solid var(--borda);
+  border-bottom-left-radius: var(--raio-s);
+}
+.conversa-bolha-conteudo { overflow-wrap: anywhere; }
+.conversa-bolha-quando {
+  display: block;
+  margin-top: 0.3rem;
+  font-size: 0.7rem;
+  color: var(--text-2);
+}
+.conversa-pensando {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--text-2);
+  font-style: italic;
+}
+
+/* Card destacado: a IA sugere virar tarefa de verdade */
+.conversa-sugestao {
+  align-self: flex-start;
+  max-width: 82%;
+  border: 1px solid color-mix(in srgb, var(--predio-acento, var(--accent)) 45%, var(--borda));
+  background: color-mix(in srgb, var(--predio-primaria, var(--bg-3)) 16%, var(--bg-2));
+  border-radius: var(--raio-m);
+  padding: 0.7rem 0.9rem;
+}
+.conversa-sugestao-titulo { margin: 0 0 0.5rem; font-size: 0.9rem; }
+.conversa-sugestao-acoes {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.conversa-sugestao-ok {
+  margin: 0;
+  align-self: flex-start;
+  font-size: 0.85rem;
+  color: var(--ok);
+}
+/* Cartão-mini da peça na conversa (chat rico, 27/08). Sem porta para o
+   Estúdio ele vira registro (--parado), nunca um botão que não leva a lugar
+   nenhum. */
+.conversa-cartao-peca {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  align-self: flex-start;
+  max-width: 82%;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  color: var(--text-0);
+  background: var(--bg-2);
+  border: 1px solid color-mix(in srgb, var(--predio-acento, var(--accent)) 45%, var(--borda));
+  border-radius: var(--raio-m);
+  padding: 0.6rem 0.8rem;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.conversa-cartao-peca:hover:not(.conversa-cartao-peca--parado) {
+  background: color-mix(in srgb, var(--predio-acento, var(--accent)) 10%, var(--bg-2));
+  border-color: var(--predio-acento, var(--accent));
+}
+.conversa-cartao-peca--parado { cursor: default; }
+.conversa-cartao-peca__texto {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+.conversa-cartao-peca__texto strong {
+  font-size: 0.92rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.conversa-cartao-peca__texto span { font-size: 0.78rem; color: var(--text-2); }
+.conversa-cartao-peca__abrir {
+  flex-shrink: 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--predio-acento, var(--accent));
+}
+
+/* Respostas prontas da IA (chat rico, 27/08): um toque envia a resposta.
+   Nome próprio de propósito — `.conversa-chips` já é o cardápio de tarefas
+   prontas da conversa vazia (app.css, mais abaixo). */
+.conversa-chips-ia {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding: 0.5rem;
+  align-self: flex-start;
+  max-width: 82%;
+}
+.conversa-chip {
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--text-0);
+  background: var(--bg-2);
+  border: 1px solid color-mix(in srgb, var(--predio-acento, var(--accent)) 45%, var(--borda));
+  border-radius: 999px;
+  padding: 0.35rem 0.8rem;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.conversa-chip:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--predio-acento, var(--accent)) 12%, var(--bg-2));
+  border-color: var(--predio-acento, var(--accent));
+}
+.conversa-chip:disabled { opacity: 0.6; cursor: default; }
+/* DEVOLUTIVA: a tarefa parou pedindo insumos — borda de atenção, sem virar
+   alarme (é o processo funcionando, não um erro). */
+.conversa-devolutiva {
+  border-color: color-mix(in srgb, var(--aviso, #d97706) 55%, var(--borda));
+  background: color-mix(in srgb, var(--aviso, #d97706) 9%, var(--bg-2));
+}
+/* SABATINA COM IA: as seções propostas do cânon, dobráveis para o cartão não
+   engolir a conversa. */
+.conversa-canon-secoes {
+  margin: 0 0 0.6rem;
+  display: grid;
+  gap: 0.3rem;
+}
+.conversa-canon-secoes details {
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-s, 6px);
+  padding: 0.35rem 0.6rem;
+  font-size: 0.85rem;
+}
+.conversa-canon-secoes summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.conversa-composer {
+  border-top: 1px solid var(--borda);
+  padding-top: 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+.conversa-select-cliente select {
+  width: auto;
+  max-width: 100%;
+  font-size: max(16px, 0.95rem);
+}
+.conversa-composer-rodape {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+.conversa-composer-esq {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+}
+/* Anexos do wizard: o que a conversa já conhece (cópia em entrada/) */
+.conversa-anexos {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.4rem;
+}
+.conversa-anexo-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.8rem;
+  color: var(--text-1);
+  border: 1px solid var(--borda);
+  border-radius: 999px;
+  padding: 0.18rem 0.6rem;
+  background: color-mix(in srgb, var(--bg-3) 50%, var(--bg-2));
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.conversa-opcoes {
+  flex: none;
+  align-self: center;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: var(--raio-s);
+  background: transparent;
+  color: var(--text-2);
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+.conversa-opcoes:hover, .conversa-opcoes[aria-expanded="true"] { background: var(--hover); color: var(--text-1); }
+.conversa-opcoes:disabled { opacity: .5; cursor: wait; }
+.conversa-opcoes-menu {
+  position: fixed;
+  z-index: 120;
+  width: min(256px, calc(100vw - 16px));
+  max-height: calc(100dvh - 16px);
+  overflow-y: auto;
+  padding: .35rem;
+  color: var(--text-1);
+  background: var(--bg-2);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-m);
+  box-shadow: 0 8px 24px rgb(0 0 0 / .18);
+}
+.conversa-opcoes-nome { margin: .35rem .5rem .45rem; font-size: .8rem; line-height: 1.4; overflow-wrap: anywhere; color: var(--text-2); }
+.conversa-opcoes-menu [role="menuitem"] {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  border: 0;
+  border-radius: var(--raio-s);
+  background: transparent;
+  color: inherit;
+  padding: .65rem .5rem;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.conversa-opcoes-menu [role="menuitem"]:hover { background: var(--hover); }
+.conversa-opcoes-menu .conversa-opcoes-perigo { border-top: 1px solid var(--borda); border-radius: 0 0 var(--raio-s) var(--raio-s); color: var(--erro); }
+.conversa-organizacao-erro { overflow-wrap: anywhere; }
+.conversa-anexo-nome { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.conversa-anexo-chip > svg, .conversa-anexo-chip > button { flex-shrink: 0; }
+.conversa-anexo-chip > button { min-width: 44px; min-height: 44px; padding: 0; }
+
+/* ============================================================
+   Peças por caso (escritório jurídico) — lista, geração,
+   modal de visualização, comentários de trecho e histórico
+   ============================================================ */
+
+/* ---------- Lista de peças ---------- */
+
+.pecas-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.pecas-item-principal {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: var(--bg-1);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-m);
+  padding: 0.65rem 0.85rem;
+  cursor: pointer;
+  transition: border-color var(--transicao), background var(--transicao), transform var(--transicao);
+}
+.pecas-item-principal:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--predio-acento, var(--accent)) 45%, var(--borda));
+  background: var(--hover);
+}
+.pecas-item-principal:disabled { opacity: 0.7; cursor: wait; }
+
+.pecas-item-topo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.pecas-item-titulo { font-size: 0.95rem; }
+.pecas-item-meta {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.78rem;
+  color: var(--text-2);
+}
+
+.pecas-versao-badge {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--predio-acento, var(--accent));
+  background: color-mix(in srgb, var(--predio-acento, var(--accent)) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--predio-acento, var(--accent)) 30%, transparent);
+  border-radius: 999px;
+  padding: 0.08rem 0.5rem;
+}
+
+/* ---------- Formulário "Gerar peça" ---------- */
+
+.pecas-form {
+  border: 1px dashed var(--borda);
+  border-radius: var(--raio-m);
+  padding: 0.9rem;
+  margin-bottom: 0.9rem;
+  background: color-mix(in srgb, var(--bg-1) 60%, transparent);
+}
+
+.pecas-form-rodape {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.pecas-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.85rem;
+  color: var(--text-1);
+  cursor: pointer;
+  font-weight: 400;
+}
+.pecas-check input[type='checkbox'] {
+  width: auto;
+  margin: 0;
+  accent-color: var(--predio-acento, var(--accent));
+}
+
+.pecas-aviso-gerando {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.pecas-spinner {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  border: 2px solid color-mix(in srgb, currentColor 35%, transparent);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: pecas-girar 0.8s linear infinite;
+}
+
+@keyframes pecas-girar {
+  to { transform: rotate(360deg); }
+}
+
+/* ---------- Overlay + modal ---------- */
+
+.pecas-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.2rem;
+  /* Véu chapado, igual ao da gaveta do menu (.simples-veu). O blur(3px)
+     custava uma composição da página inteira por um efeito que, num fundo de
+     papel liso, ninguém enxerga. */
+  background: color-mix(in srgb, var(--tinta) 55%, transparent);
+}
+.pecas-overlay-interno { z-index: 95; }
+
+.pecas-modal {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-height: 92vh;
+  background: var(--bg-2);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-g);
+  box-shadow: var(--sombra-3);
+  overflow: hidden;
+}
+.pecas-modal-grande { max-width: 1080px; }
+.pecas-modal-media { max-width: 760px; }
+.pecas-modal-pequena { max-width: 520px; }
+
+.pecas-modal-cabecalho {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.9rem 1.1rem;
+  border-bottom: 1px solid var(--borda);
+}
+.pecas-modal-cabecalho .secao-titulo { margin: 0; }
+
+.pecas-modal-titulo {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+  min-width: 0;
+  flex: 1;
+}
+.pecas-modal-titulo .secao-titulo {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.pecas-fechar {
+  margin-left: auto;
+  flex: none;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--raio-s);
+  color: var(--text-2);
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0.35rem 0.55rem;
+  cursor: pointer;
+  transition: background var(--transicao), color var(--transicao);
+}
+.pecas-fechar:hover { background: var(--hover); color: var(--text-0); }
+
+.pecas-modal-acoes {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+  padding: 0.65rem 1.1rem;
+  border-bottom: 1px solid var(--borda);
+  background: color-mix(in srgb, var(--bg-1) 55%, transparent);
+}
+.pecas-copiado { color: var(--ok); border-color: color-mix(in srgb, var(--ok) 40%, transparent); }
+
+.pecas-modal-corpo {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 1rem 1.1rem;
+}
+
+.pecas-modal-corpo-duplo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 1rem;
+  align-items: start;
+}
+
+.pecas-modal-rodape {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+  padding: 0.7rem 1.1rem;
+  border-top: 1px solid var(--borda);
+  background: color-mix(in srgb, var(--bg-1) 55%, transparent);
+}
+
+/* ---------- Conteúdo da peça ---------- */
+
+.pecas-dica-selecao { margin-bottom: 0.5rem; }
+
+.pecas-conteudo {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 0.92rem;
+  line-height: 1.7;
+  color: var(--text-0);
+  background: var(--bg-1);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-m);
+  padding: 1rem 1.1rem;
+}
+
+.pecas-edicao textarea {
+  width: 100%;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  line-height: 1.6;
+  min-height: 320px;
+}
+.pecas-edicao-rodape {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  margin-top: 0.6rem;
+}
+
+.pecas-botao-flutuante {
+  position: fixed;
+  z-index: 96;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--predio-acento, var(--accent));
+  color: var(--bg-0);
+  border: none;
+  border-radius: 999px;
+  padding: 0.45rem 0.9rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: var(--sombra-2);
+  transition: transform var(--transicao), filter var(--transicao);
+}
+.pecas-botao-flutuante:hover { filter: brightness(1.1); transform: translateY(-1px); }
+
+/* ---------- Comentários de trecho ---------- */
+
+.pecas-coluna-comentarios {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  position: sticky;
+  top: 0;
+}
+
+.pecas-comentarios-cabecalho {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.pecas-comentarios-cabecalho h4 { margin: 0; font-size: 0.92rem; }
+
+.pecas-comentarios-vazio {
+  border: 1px dashed var(--borda);
+  border-radius: var(--raio-m);
+  padding: 1rem;
+  text-align: center;
+  font-size: 0.82rem;
+  color: var(--text-2);
+}
+
+.pecas-comentario {
+  background: var(--bg-1);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-m);
+  padding: 0.7rem 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.pecas-comentario-resolvido { opacity: 0.75; }
+.pecas-comentario-novo {
+  border-color: color-mix(in srgb, var(--predio-acento, var(--accent)) 50%, var(--borda));
+  background: color-mix(in srgb, var(--predio-acento, var(--accent)) 6%, var(--bg-1));
+}
+
+.pecas-comentario-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.pecas-comentario-data { font-size: 0.72rem; color: var(--text-2); }
+
+.pecas-comentario-rotulo {
+  margin: 0;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--text-2);
+  text-transform: uppercase;
+}
+
+.pecas-comentario-instrucao {
+  margin: 0;
+  font-size: 0.85rem;
+  font-style: italic;
+  color: var(--text-1);
+}
+
+.pecas-comentario-trecho {
+  margin: 0;
+  max-height: 110px;
+  overflow: auto;
+  font-size: 0.8rem;
+  color: var(--text-1);
+  background: var(--bg-2);
+  border-left: 3px solid var(--predio-acento, var(--accent));
+  border-radius: var(--raio-s);
+  padding: 0.45rem 0.6rem;
+  white-space: pre-wrap;
+}
+
+.pecas-comentario-aviso { margin: 0; font-size: 0.8rem; }
+
+.pecas-comentario-acoes {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.pecas-comentario-regenerar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+.pecas-comentario-regenerar input { font-size: 0.82rem; }
+
+.pecas-comentario-sugestoes {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+.pecas-sugestao {
+  background: transparent;
+  border: 1px solid var(--borda);
+  border-radius: 999px;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.74rem;
+  color: var(--text-2);
+  cursor: pointer;
+  transition: border-color var(--transicao), color var(--transicao);
+}
+.pecas-sugestao:hover:not(:disabled) {
+  border-color: var(--predio-acento, var(--accent));
+  color: var(--text-0);
+}
+.pecas-sugestao:disabled { opacity: 0.55; cursor: not-allowed; }
+
+/* Diff verde/vermelho (original × proposta) */
+.pecas-diff {
+  font-size: 0.83rem;
+  line-height: 1.65;
+  background: var(--bg-2);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-s);
+  padding: 0.55rem 0.7rem;
+  max-height: 220px;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.pecas-diff-add {
+  text-decoration: none;
+  color: var(--ok);
+  background: color-mix(in srgb, var(--ok) 16%, transparent);
+  border-radius: 3px;
+  padding: 0 0.1em;
+}
+.pecas-diff-del {
+  color: var(--erro);
+  background: color-mix(in srgb, var(--erro) 14%, transparent);
+  border-radius: 3px;
+  padding: 0 0.1em;
+}
+
+/* ---------- Histórico de versões ---------- */
+
+.pecas-versoes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.pecas-versao-item {
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-m);
+  background: var(--bg-1);
+  padding: 0.65rem 0.8rem;
+}
+
+.pecas-versao-topo {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+  font-size: 0.82rem;
+}
+.pecas-versao-acoes {
+  margin-left: auto;
+  display: inline-flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.pecas-versao-conteudo {
+  margin-top: 0.6rem;
+  max-height: 300px;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 0.82rem;
+  line-height: 1.6;
+  color: var(--text-1);
+  background: var(--bg-2);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-s);
+  padding: 0.6rem 0.75rem;
+}
+
+/* ---------- Responsivo ---------- */
+
+@media (max-width: 900px) {
+  .pecas-modal-corpo-duplo { grid-template-columns: 1fr; }
+  .pecas-coluna-comentarios { position: static; }
+  .pecas-overlay { padding: 0.6rem; }
+  .pecas-modal { max-height: 96vh; }
+}
+
+@media (max-width: 640px) {
+  .pecas-form .linha-campos { grid-template-columns: 1fr; }
+  .pecas-modal-acoes { gap: 0.35rem; }
+  .pecas-modal-acoes .botao { flex: 1 1 auto; justify-content: center; }
+  .pecas-versao-acoes { margin-left: 0; width: 100%; }
+}
+
+/* ============================================================
+   Fase 3 — Chat-hub com modos (aba Chat AI do juris)
+   ============================================================ */
+
+/* Hub de 4 cards na tela de conversa nova */
+.chathub {
+  margin: auto;
+  width: 100%;
+  max-width: 640px;
+  padding: 1.2rem 0.5rem;
+}
+.chathub-cabecalho {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+.chathub-cabecalho h3 { margin-bottom: 0.25rem; }
+.chathub-cabecalho p { margin: 0; font-size: 0.88rem; }
+
+.chathub-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+@media (max-width: 640px) {
+  .chathub-cards { grid-template-columns: 1fr; }
+}
+.chathub-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.3rem;
+  text-align: left;
+  background: var(--bg-1);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-m);
+  padding: 0.95rem 1rem;
+  cursor: pointer;
+  transition: border-color var(--transicao), background var(--transicao), transform var(--transicao);
+}
+.chathub-card:hover {
+  background: var(--hover);
+  border-color: color-mix(in srgb, var(--predio-acento, var(--accent)) 55%, var(--borda));
+  transform: translateY(-1px);
+}
+.chathub-card-icone { font-size: 1.4rem; line-height: 1; }
+.chathub-card-titulo { font-size: 0.95rem; }
+.chathub-card-desc { font-size: 0.82rem; color: var(--text-2); line-height: 1.45; }
+
+/* Badge do modo (cabeçalho da conversa e lista lateral) */
+.chathub-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1;
+  padding: 0.22rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--borda-forte);
+  background: var(--bg-3);
+  color: var(--text-1);
+  white-space: nowrap;
+}
+.chathub-badge-pesquisa {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--borda));
+  background: color-mix(in srgb, var(--accent) 12%, var(--bg-3));
+}
+.chathub-badge-contrato {
+  border-color: color-mix(in srgb, var(--ok) 45%, var(--borda));
+  background: color-mix(in srgb, var(--ok) 10%, var(--bg-3));
+}
+.chathub-badge-caso {
+  border-color: color-mix(in srgb, var(--predio-acento, var(--accent)) 50%, var(--borda));
+  background: color-mix(in srgb, var(--predio-acento, var(--accent)) 12%, var(--bg-3));
+}
+
+/* Cabeçalho da conversa (badge + caso + dica) */
+.chathub-contexto {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+.chathub-contexto-dica {
+  margin-left: auto;
+  font-size: 0.74rem;
+  color: var(--text-2);
+}
+
+/* Setup do modo escolhido (antes da 1ª mensagem) */
+.chathub-setup {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  font-size: 0.88rem;
+  background: color-mix(in srgb, var(--predio-primaria, var(--bg-3)) 18%, var(--bg-2));
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-m);
+  padding: 0.5rem 0.8rem;
+}
+.chathub-voltar { flex: none; }
+.chathub-setup-texto { color: var(--text-1); }
+
+/* Contrato em análise: dropzone → "lendo…" → chip com o nome */
+.chathub-contrato {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+.chathub-dropzone {
+  flex: 1 1 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  border: 1.5px dashed var(--borda-forte);
+  border-radius: var(--raio-m);
+  background: var(--bg-1);
+  color: var(--text-1);
+  font-size: 0.9rem;
+  padding: 0.9rem 1rem;
+  cursor: pointer;
+  transition: border-color var(--transicao), background var(--transicao);
+}
+.chathub-dropzone:hover,
+.chathub-dropzone.arrastando {
+  border-color: color-mix(in srgb, var(--predio-acento, var(--accent)) 65%, var(--borda));
+  background: var(--hover);
+}
+.chathub-dropzone-dica { font-size: 0.76rem; color: var(--text-2); }
+.chathub-contrato-lendo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.88rem;
+  font-style: italic;
+  color: var(--text-2);
+}
+.chathub-contrato-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.3rem 0.65rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--ok) 45%, var(--borda));
+  background: color-mix(in srgb, var(--ok) 10%, var(--bg-2));
+  color: var(--text-0);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Select do caso (modo "Conversar sobre um Caso") */
+.chathub-select-caso {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.chathub-select-caso select { max-width: 100%; }
+.chathub-select-caso-ok { font-size: 0.82rem; color: var(--text-2); }
+.chathub-sem-casos { margin: 0; font-size: 0.85rem; }
+
+/* ============================================================
+   Fase 3 — Biblioteca "Doutrina & Modelos" (aba do juris)
+   ============================================================ */
+
+.biblioteca {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+.biblioteca-topo {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+.biblioteca-topo .secao-titulo { margin-bottom: 0.15rem; }
+.biblioteca-sub { margin: 0; max-width: 62ch; }
+.biblioteca-topo-acoes {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* Tabs Modelos de Peça / Doutrinas */
+.biblioteca-tabs {
+  display: flex;
+  gap: 0.25rem;
+  background: var(--bg-2);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-m);
+  padding: 0.3rem;
+  width: fit-content;
+  max-width: 100%;
+}
+.biblioteca-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1px solid transparent;
+  border-radius: var(--raio-s);
+  background: none;
+  color: var(--text-1);
+  font-size: 0.88rem;
+  font-weight: 600;
+  padding: 0.45rem 0.9rem;
+  cursor: pointer;
+  transition: background var(--transicao), color var(--transicao), border-color var(--transicao);
+}
+.biblioteca-tab:hover { background: var(--hover); }
+.biblioteca-tab.ativa {
+  background: color-mix(in srgb, var(--predio-acento, var(--accent)) 12%, var(--bg-1));
+  border-color: color-mix(in srgb, var(--predio-acento, var(--accent)) 45%, transparent);
+  color: var(--text-0);
+}
+.biblioteca-tab-conta {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-2);
+  background: var(--bg-3);
+  border-radius: 999px;
+  padding: 0.1rem 0.45rem;
+}
+
+/* Busca + filtros */
+.biblioteca-filtros {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.biblioteca-filtros .campo-busca { flex: 1 1 240px; }
+.biblioteca-filtros select { width: auto; max-width: 100%; }
+
+/* Grid de cards */
+.biblioteca-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 0.8rem;
+}
+.biblioteca-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  background: var(--bg-2);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-m);
+  padding: 0.9rem 1rem;
+  transition: border-color var(--transicao);
+}
+.biblioteca-card:hover {
+  border-color: color-mix(in srgb, var(--predio-acento, var(--accent)) 45%, var(--borda));
+}
+.biblioteca-card-topo {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+}
+.biblioteca-card-titulo {
+  font-size: 0.95rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+.biblioteca-card-badges {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+.biblioteca-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.18rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--borda-forte);
+  background: var(--bg-3);
+  color: var(--text-1);
+}
+.biblioteca-badge-area {
+  border-color: color-mix(in srgb, var(--predio-acento, var(--accent)) 45%, var(--borda));
+  background: color-mix(in srgb, var(--predio-acento, var(--accent)) 10%, var(--bg-3));
+}
+.biblioteca-card-desc {
+  margin: 0;
+  font-size: 0.84rem;
+  color: var(--text-1);
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.biblioteca-tags {
+  display: flex;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+}
+.biblioteca-tag {
+  font-size: 0.7rem;
+  color: var(--text-2);
+  background: var(--hover);
+  border-radius: 999px;
+  padding: 0.12rem 0.5rem;
+}
+.biblioteca-card-meta {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  font-size: 0.74rem;
+  color: var(--text-2);
+  margin-top: auto;
+}
+.biblioteca-card-acoes {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  border-top: 1px dashed var(--borda);
+  padding-top: 0.55rem;
+}
+
+/* Estado vazio (também aceita soltar um PDF/TXT para importar) */
+.biblioteca-vazio {
+  text-align: center;
+  border: 1.5px dashed var(--borda-forte);
+  border-radius: var(--raio-m);
+  padding: 2.2rem 1rem;
+  transition: border-color var(--transicao), background var(--transicao);
+}
+.biblioteca-vazio.arrastando {
+  border-color: color-mix(in srgb, var(--predio-acento, var(--accent)) 65%, var(--borda));
+  background: var(--hover);
+}
+.biblioteca-vazio-arte { font-size: 2rem; margin-bottom: 0.4rem; }
+.biblioteca-vazio h3 { margin-bottom: 0.25rem; }
+.biblioteca-vazio p { margin: 0 auto; max-width: 52ch; }
+
+/* Modais (criar/editar e visualizar) */
+.biblioteca-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  background: rgba(57, 46, 57, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.2rem;
+}
+.biblioteca-modal {
+  width: 100%;
+  max-width: 860px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-1);
+  border: 1px solid var(--borda-forte);
+  border-radius: var(--raio-m);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+}
+.biblioteca-modal-cabecalho {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  border-bottom: 1px solid var(--borda);
+  padding: 0.9rem 1.1rem;
+}
+.biblioteca-modal-cabecalho .secao-titulo { margin: 0; flex: 1; }
+.biblioteca-fechar {
+  background: none;
+  border: none;
+  color: var(--text-2);
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0.3rem 0.5rem;
+  border-radius: var(--raio-s);
+  transition: color var(--transicao), background var(--transicao);
+}
+.biblioteca-fechar:hover { color: var(--text-0); background: var(--hover); }
+.biblioteca-modal-corpo {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+.biblioteca-modal-rodape {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  border-top: 1px solid var(--borda);
+  padding: 0.8rem 1.1rem;
+}
+.biblioteca-form-linha {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.7rem;
+}
+.biblioteca-campo-conteudo textarea {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.85rem;
+  min-height: 260px;
+  resize: vertical;
+}
+.biblioteca-ver-acoes {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+.biblioteca-copiado { color: var(--ok); }
+.biblioteca-conteudo {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.83rem;
+  line-height: 1.6;
+  background: var(--bg-2);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-s);
+  padding: 0.9rem 1rem;
+  max-height: 56vh;
+  overflow-y: auto;
+}
+
+@media (max-width: 640px) {
+  .biblioteca-topo-acoes { width: 100%; }
+  .biblioteca-topo-acoes .botao { flex: 1 1 auto; justify-content: center; }
+  .biblioteca-tabs { width: 100%; }
+  .biblioteca-tab { flex: 1; justify-content: center; }
+  .biblioteca-modal { max-height: 96vh; }
+}
+
+/* ============================================================
+   Fase 4 (juris) — Playbook por área + Feedbacks dos advogados
+   ============================================================ */
+
+/* ---- Feedbacks: captura (Chat AI e rodapé das peças) ---- */
+.feedback-acoes {
+  display: inline-flex;
+  gap: 0.2rem;
+  align-items: center;
+}
+/* Âncora do 👍/👎 flutuante: a bolha da IA vira o referencial. */
+.conversa-bolha.conversa-ia { position: relative; }
+.conversa-bolha .feedback-acoes {
+  position: absolute;
+  right: 0.5rem;
+  bottom: -0.95rem;
+  opacity: 0;
+  transition: opacity var(--transicao);
+}
+.conversa-bolha:hover .feedback-acoes,
+.conversa-bolha:focus-within .feedback-acoes { opacity: 1; }
+.feedback-botao {
+  padding: 0.15rem 0.4rem;
+  font-size: 0.85rem;
+  line-height: 1;
+  background: var(--bg-elevado);
+  border: 1px solid var(--borda);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: transform var(--transicao), border-color var(--transicao);
+}
+.feedback-botao:hover:not(:disabled) { transform: scale(1.12); border-color: var(--borda-forte); }
+.feedback-botao:disabled { opacity: 0.5; cursor: default; }
+.feedback-feito {
+  font-size: 0.78rem;
+  color: var(--text-2);
+  white-space: nowrap;
+}
+.conversa-bolha .feedback-feito {
+  position: absolute;
+  right: 0.5rem;
+  bottom: -0.95rem;
+  background: var(--bg-elevado);
+  border: 1px solid var(--borda);
+  border-radius: 999px;
+  padding: 0.12rem 0.5rem;
+}
+.feedback-caixa {
+  max-width: 34rem;
+  margin: 0.9rem 0 0.2rem;
+  padding: 0.6rem 0.7rem;
+  background: var(--bg-3);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-s);
+}
+.feedback-caixa textarea { width: 100%; resize: vertical; }
+.feedback-caixa-acoes {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.45rem;
+  margin-top: 0.45rem;
+}
+.feedback-conflito {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.6rem;
+  max-width: 34rem;
+  margin: 0.6rem 0 0.2rem;
+  padding: 0.6rem 0.8rem;
+  font-size: 0.85rem;
+  background: color-mix(in srgb, var(--aviso) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--aviso) 35%, transparent);
+  border-radius: var(--raio-s);
+}
+.feedback-conflito p { margin: 0; line-height: 1.5; }
+.feedback-conflito-campo { color: var(--text-2); }
+.feedback-rodape-peca {
+  padding: 0.6rem 1.1rem;
+  border-top: 1px solid var(--borda);
+  background: var(--bg-2);
+}
+.feedback-rodape-linha {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+}
+.feedback-rodape-peca .feedback-feito { position: static; }
+.feedback-rodape-peca .feedback-caixa { margin-top: 0.5rem; max-width: none; }
+.feedback-rodape-peca .feedback-conflito { max-width: none; }
+
+@media (max-width: 640px) {
+  .conversa-bolha .feedback-acoes { opacity: 1; }
+}
+
+/* ------------------------------------------------------------------ */
+/* Fase 5 — Notificações (ConfigOrg): WhatsApp da org + preferências    */
+/* ------------------------------------------------------------------ */
+.notif-bloco {
+  margin-top: 1.1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--borda);
+}
+.notif-bloco-cabecalho {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+.notif-bloco-cabecalho .secao-subtitulo { margin: 0; }
+.notif-acoes { margin: 0 0 0.9rem; }
+
+/* ------------------------------------------------------------------ */
+/* Fase 5 — Credenciais de tribunais (ConfigOrg, BYOC)                  */
+/* ------------------------------------------------------------------ */
+.tribunais-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  margin-top: 0.6rem;
+}
+.tribunais-item {
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-s);
+  padding: 0.7rem 0.9rem;
+  background: var(--bg-2);
+}
+.tribunais-cabecalho {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+.tribunais-nome { font-size: 0.95rem; }
+.tribunais-acoes {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.tribunais-meta {
+  margin: 0.35rem 0 0;
+  font-size: 0.8rem;
+  color: var(--text-2);
+}
+.tribunais-alerta { margin-top: 0.5rem; }
+.tribunais-form {
+  margin-top: 0.7rem;
+  padding-top: 0.7rem;
+  border-top: 1px dashed var(--borda);
+}
+.tribunais-form-rodape { justify-content: flex-end; margin: 0.2rem 0 0; }
+
+@media (max-width: 640px) {
+  .tribunais-acoes { margin-left: 0; flex-basis: 100%; }
+}
+
+/* ------------------------------------------------------------------ */
+/* Fase 5 — Alerta jurídico (IA) na timeline do monitor                 */
+/* ------------------------------------------------------------------ */
+/* Segue o esquema de criticidade dos eventos (evento-critico usa       */
+/* var(--erro) na marca): o alerta da IA soma uma borda destacada e o   */
+/* selo ⚖️ para saltar aos olhos no meio das movimentações comuns.      */
+.evento-alerta-juridico .evento-conteudo {
+  border: 1px solid color-mix(in srgb, var(--erro) 35%, transparent);
+  border-left: 3px solid var(--erro);
+  border-radius: var(--raio-s);
+  padding: 0.55rem 0.7rem;
+  background: color-mix(in srgb, var(--erro) 6%, transparent);
+}
+.evento-alerta-juridico .evento-marca {
+  background: var(--erro);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--erro) 22%, transparent);
+}
+.evento-alerta-pill {
+  color: var(--erro);
+  background: color-mix(in srgb, var(--erro) 12%, transparent);
+  border-color: color-mix(in srgb, var(--erro) 30%, transparent);
+}
+.evento-alerta-juridico.lido { opacity: 0.75; }
+
+/* Fase 7: estimativa de tokens/custo antes de gerar a peça (preview-tokens). */
+.pecas-preview-tokens {
+  margin-right: auto;
+  font-size: 0.78rem;
+  color: var(--text-1);
+  padding: 0.3rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(128, 128, 128, 0.1);
+  border: 1px solid rgba(128, 128, 128, 0.22);
+  white-space: nowrap;
+}
+
+/* ============================================================
+   Fase 8 — Oficina de Código (office dev): loops editáveis
+   ============================================================ */
+
+.oficina-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  max-width: 880px;
+}
+
+/* Intro da metodologia (mesma família visual do playbook-intro). */
+.oficina-intro {
+  padding: 0.8rem 1rem;
+  background: color-mix(in srgb, var(--predio-acento, var(--accent)) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--predio-acento, var(--accent)) 28%, transparent);
+  border-radius: var(--raio-s);
+}
+.oficina-intro p { margin: 0; font-size: 0.9rem; line-height: 1.55; color: var(--text-1); }
+.oficina-intro strong { color: var(--text-0); }
+
+/* ---- Indicador de passos do wizard ---- */
+.oficina-passos {
+  display: flex;
+  gap: 0.4rem;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1rem;
+  flex-wrap: wrap;
+}
+.oficina-passo-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.4rem 0.85rem;
+  border: 1px solid var(--borda);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-2);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color var(--transicao), color var(--transicao), background var(--transicao);
+}
+.oficina-passo-chip:disabled { cursor: not-allowed; opacity: 0.55; }
+.oficina-passo-chip.ativo {
+  color: var(--text-0);
+  border-color: var(--predio-acento, var(--accent));
+  background: color-mix(in srgb, var(--predio-acento, var(--accent)) 12%, transparent);
+}
+.oficina-passo-chip.feito { color: var(--text-1); border-color: var(--borda-forte); }
+.oficina-passo-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 50%;
+  background: var(--hover);
+  font-size: 0.72rem;
+}
+.oficina-passo-chip.ativo .oficina-passo-num {
+  background: var(--predio-acento, var(--accent));
+  color: var(--predio-ink, var(--accent-ink));
+}
+
+.oficina-passo-corpo { display: flex; flex-direction: column; gap: 0.4rem; }
+
+/* ---- Passo 1: cards de tipo de loop ---- */
+.oficina-tipos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 0.7rem;
+  margin-top: 0.5rem;
+}
+.oficina-tipo-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.9rem 1rem;
+  text-align: left;
+  background: var(--bg-3);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-m);
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  transition: border-color var(--transicao), box-shadow var(--transicao), transform var(--transicao);
+}
+.oficina-tipo-card:hover {
+  border-color: var(--predio-acento, var(--accent));
+  box-shadow: var(--sombra-1);
+  transform: translateY(-1px);
+}
+.oficina-tipo-card.selecionado {
+  border-color: var(--predio-acento, var(--accent));
+  background: color-mix(in srgb, var(--predio-acento, var(--accent)) 8%, var(--bg-3));
+}
+.oficina-tipo-icone { font-size: 1.5rem; line-height: 1; }
+.oficina-tipo-nome { color: var(--text-0); font-size: 0.95rem; }
+.oficina-tipo-descricao { margin: 0; color: var(--text-1); font-size: 0.85rem; line-height: 1.45; }
+.oficina-tipo-exemplo { color: var(--text-2); font-size: 0.8rem; line-height: 1.4; }
+
+/* ---- Passo 2: descrição + rascunho ---- */
+.oficina-tipo-escolhido {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.7rem;
+  padding: 0.35rem 0.7rem;
+  border: 1px solid var(--borda);
+  border-radius: 999px;
+  background: var(--bg-2);
+  font-size: 0.88rem;
+  align-self: flex-start;
+}
+.oficina-dica {
+  margin: 0 0 0.4rem;
+  padding: 0.55rem 0.8rem;
+  font-size: 0.85rem;
+  color: var(--text-1);
+  background: var(--bg-2);
+  border: 1px dashed var(--borda-forte);
+  border-radius: var(--raio-s);
+}
+.oficina-dica code {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.8rem;
+  background: var(--hover);
+  padding: 0.05rem 0.3rem;
+  border-radius: 4px;
+}
+.oficina-rascunhando {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.6rem 0.85rem;
+  margin: 0.4rem 0;
+  font-size: 0.88rem;
+  color: var(--text-1);
+  background: color-mix(in srgb, var(--predio-acento, var(--accent)) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--predio-acento, var(--accent)) 25%, transparent);
+  border-radius: var(--raio-s);
+}
+.oficina-spinner {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  border: 2px solid color-mix(in srgb, currentColor 35%, transparent);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: oficina-girar 0.8s linear infinite;
+}
+@keyframes oficina-girar {
+  to { transform: rotate(360deg); }
+}
+.oficina-acoes { justify-content: flex-end; }
+
+/* ---- Passo 3: contrato editável ---- */
+.oficina-secao { margin: 0.5rem 0 0.9rem; }
+.oficina-secao-titulo {
+  margin: 0 0 0.2rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-0);
+}
+.oficina-secao .texto-suave { margin: 0 0 0.55rem; }
+
+/* Inputs de comando (verificação) e URL de repo: monoespaçado. */
+.oficina-comando {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.83rem;
+}
+
+.oficina-criterio {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) auto;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+.oficina-plano-passo {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+.oficina-plano-num { color: var(--text-2); font-size: 0.85rem; min-width: 1.4rem; text-align: right; }
+
+.oficina-linha-final {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+  margin: 0.3rem 0 0.5rem;
+}
+.oficina-voltas { margin-bottom: 0; }
+.oficina-voltas input { width: 5.5rem; }
+.oficina-voltas-nota { margin: 0; flex: 1 1 260px; }
+
+/* ---- Confirmação pós-início ---- */
+.oficina-sucesso { text-align: center; padding: 2rem 1.4rem; }
+.oficina-sucesso-icone { font-size: 2.4rem; margin-bottom: 0.4rem; }
+.oficina-sucesso h3 { margin: 0 0 0.3rem; }
+.oficina-sucesso p { margin: 0 auto; max-width: 52ch; }
+.oficina-sucesso-acoes {
+  display: flex;
+  justify-content: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-top: 1.1rem;
+}
+
+/* ---- Loops recentes (rodapé) ---- */
+.oficina-recentes { margin-top: 0.2rem; }
+.oficina-lista-loops {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.oficina-loop-item {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.55rem 0.85rem;
+  background: var(--bg-3);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-s);
+  font-size: 0.88rem;
+}
+.oficina-loop-titulo {
+  flex: 1;
+  min-width: 0;
+  color: var(--text-0);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.oficina-loop-data { color: var(--text-2); font-size: 0.8rem; white-space: nowrap; }
+
+@media (max-width: 640px) {
+  .oficina-criterio { grid-template-columns: 1fr; }
+  .oficina-plano-passo { grid-template-columns: auto 1fr; }
+  .oficina-plano-passo .botao-texto { grid-column: 2; justify-self: start; }
+  .oficina-loop-item { flex-wrap: wrap; }
+  .oficina-loop-titulo { flex-basis: 100%; white-space: normal; }
+}
+
+/* ---------- ⚙️ Sala das máquinas na topbar (substitui a faixa da página
+   de prédios — a página é só os escritórios) ---------- */
+.topbar-engrenagem {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem;
+  border-radius: var(--raio-s);
+  border: 1px solid transparent;
+  background: none;
+  color: var(--text-1);
+  font-size: 1rem;
+  text-decoration: none;
+  cursor: pointer;
+  list-style: none;
+}
+.topbar-engrenagem::-webkit-details-marker { display: none; }
+.topbar-engrenagem:hover { color: var(--text-0); background: var(--hover); }
+
+.topbar-engrenagem-menu { position: relative; }
+.topbar-engrenagem-menu > nav {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  min-width: 220px;
+  display: flex;
+  flex-direction: column;
+  padding: 6px;
+  border-radius: var(--raio-m);
+  border: 1px solid var(--borda);
+  background: var(--bg-elevado);
+  box-shadow: var(--sombra-2);
+  z-index: 60;
+}
+.topbar-engrenagem-menu > nav a {
+  padding: 0.5rem 0.65rem;
+  border-radius: var(--raio-s);
+  color: var(--text-0);
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+.topbar-engrenagem-menu > nav a:hover { background: var(--hover); }
+
+/* ---------- Toque e leitura no celular ----------
+   Rede de segurança do zoom do iOS: qualquer campo com fonte < 16px faz o
+   Safari ampliar a página inteira no foco. E alvos de toque de 44px (mínimo
+   iOS/WCAG) em ponteiro grosso — os ícones do topo tinham 33-40px. */
+@media (pointer: coarse) {
+  input, select, textarea { font-size: max(16px, 1em); }
+  .shell-avatar, .simples-logo {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+/* ---------- Visor da peça entregue ---------- */
+.visor-peca { display: flex; flex-direction: column; gap: 0.6rem; align-items: flex-start; }
+.visor-html {
+  width: 100%;
+  min-height: 420px;
+  border: 1px solid var(--borda);
+  border-radius: 12px;
+  background: #fff;
+}
+.visor-tabela { overflow-x: auto; width: 100%; }
+.visor-markdown { line-height: 1.55; }
+.resultado-entrega__texto { padding: 1.2rem; border: 1px solid var(--borda, #e6e6ea); border-radius: 12px; max-height: 65vh; overflow: auto; overflow-wrap: anywhere; }
+.resultado-entrega__texto > :first-child { margin-top: 0; }
+.resultado-entrega__texto a { text-decoration: underline; }
+.visor-markdown h2 { font-size: 1.2rem; margin: 0.8rem 0 0.4rem; }
+.visor-markdown h3 { font-size: 1.05rem; margin: 0.7rem 0 0.3rem; }
+.visor-markdown h4 { font-size: 0.98rem; margin: 0.6rem 0 0.3rem; }
+.visor-markdown p { margin: 0 0 0.5rem; }
+.visor-markdown li { margin-left: 1.1rem; }
+
+/* Player inline da entrega de mídia (▶ Assistir / 🖼 Ver): o vídeo da peça
+   só tinha "Baixar" — o dono aprova o que consegue VER. */
+.visor-video,
+.visor-imagem {
+  display: block;
+  width: 100%;
+  max-height: 70vh;
+  border-radius: 10px;
+  background: #000;
+  object-fit: contain;
+}
+
+/* Tarefa que falhou: coral, com o texto técnico atrás de "ver detalhes". */
+.doca-placa-falha { border-color: color-mix(in srgb, var(--coral) 45%, var(--borda)); }
+/* Em doca estreita o nome da tarefa virava "N…" espremido pelos botões:
+   aqui o topo pode quebrar linha — o nome importa mais que a linha única. */
+.doca-placa-falha .doca-placa-topo { flex-wrap: wrap; }
+.doca-placa-falha .doca-placa-titulo { white-space: normal; }
+.doca-placa-falha .doca-balao-led { background: var(--coral-forte); }
+.doca-placa-erro {
+  margin: 0.5rem 0 0;
+  padding: 0.6rem 0.7rem;
+  border-radius: 10px;
+  background: var(--bg-2);
+  font-size: 0.85rem;
+  white-space: pre-wrap;
+  max-height: 200px;
+  overflow: auto;
+}
+
+/* Arrastar arquivos em cima do campo de escrever. */
+.conversa-composer.arrastando {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+.conversa-dica-arrastar { font-size: 0.85rem; }
+@media (max-width: 560px) {
+  .conversa-dica-arrastar { display: none; }
+}
+
+/* O rodapé do card ("Nenhuma tarefa ainda" / "há 16 min") e a descrição eram os
+   textos mais apagados da tela no escuro. */
+:root[data-theme='dark'] .card-predio .texto-suave { color: var(--text-1); }
+
+/* Botão de voz gravando: pulso suave (e nada, sob prefers-reduced-motion). */
+.botao.gravando { animation: pulso-gravando 1.6s ease-in-out infinite; }
+@keyframes pulso-gravando {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--coral) 55%, transparent); }
+  50% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--coral) 0%, transparent); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .botao.gravando { animation: none; }
+}
+
+/* Editor de andares por membro (Configurações → Membros) */
+.andares-membro { position: relative; }
+.andares-membro-lista {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.7rem 0.8rem;
+  background: var(--superficie-1, #fff);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-m);
+  box-shadow: var(--sombra-2);
+}
+.andares-membro-dica {
+  margin: 0.3rem 0 0;
+  font-size: 0.75rem;
+  line-height: 1.35;
+}
+
+/* Aba Agenda (atividades que o andar executa sozinho) */
+.agenda-aba { display: flex; flex-direction: column; gap: 1.1rem; }
+.agenda-prompt {
+  max-width: 420px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.82rem;
+}
+.agenda-nota { margin-top: 0.6rem; font-size: 0.8rem; }
+
+/* Chamada do CEO no prédio (a porta de entrada única) */
+.predio-ceo-chamada {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.9rem 1.2rem;
+  border-bottom: 1px solid var(--borda);
+  color: var(--text-0);
+  background: color-mix(in srgb, #c4704b 7%, transparent);
+  transition: background var(--transicao);
+}
+.predio-ceo-chamada:hover {
+  text-decoration: none;
+  color: var(--text-0);
+  background: color-mix(in srgb, #c4704b 14%, transparent);
+}
+.predio-ceo-chamada > span:first-child { font-size: 1.4rem; }
+.predio-ceo-chamada strong { display: block; }
+.predio-ceo-chamada small { color: var(--text-2); }
+.pagina-ceo .conversa { min-height: 60vh; }
+
+/* Cartão do plano (CEO fase 2) */
+.conversa-plano-etapas {
+  margin: 0.4rem 0 0.6rem;
+  padding-left: 1.4rem;
+  font-size: 0.88rem;
+}
+.conversa-plano-etapas li { margin-bottom: 0.2rem; }
+
+/* Vitrine dos andares disponíveis (upsell sem preço — modelo de serviço) */
+.predio-vitrine {
+  padding: 0.9rem 1.2rem;
+  background: color-mix(in srgb, var(--borda) 22%, transparent);
+}
+.predio-vitrine-titulo { margin: 0 0 0.5rem; font-size: 0.9rem; font-weight: 600; }
+.predio-vitrine-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.predio-vitrine-lista li { display: flex; align-items: center; gap: 0.55rem; }
+.predio-vitrine-nome { flex: 1; font-size: 0.9rem; }
+.predio-vitrine-nota { margin: 0.6rem 0 0; font-size: 0.78rem; }
+
+/* ---------- Sugestões do escritório (conversa e agenda) ----------
+   O repertório do andar oferecido como atalho: na conversa nova e no
+   formulário da agenda. Chips que envolvem em várias linhas — o título de
+   uma atividade de conteúdo é uma frase, não uma palavra. */
+.agenda-sugestoes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.6rem;
+}
+
+.agenda-sugestoes .texto-suave {
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.agenda-sugestoes { margin-bottom: 1rem; }
+.agenda-sugestoes .texto-suave { flex-basis: 100%; }
+
+@media (max-width: 640px) {
+  .agenda-sugestoes .botao-pequeno {
+    flex: 1 1 100%;
+    justify-content: flex-start;
+    text-align: left;
+  }
+}
+
+/* ---------- Aba 🛡️ Teste de segurança (office lgpd) ---------- */
+
+.pentest-aba { display: flex; flex-direction: column; gap: 1rem; }
+
+.pentest-acoes { display: flex; flex-direction: column; gap: 0.75rem; }
+
+/* Uma ação por linha, com o botão à direita: a ordem (termo → verificação →
+   relatório) é a do trabalho real, e ler de cima para baixo já ensina o
+   processo a quem nunca fez. */
+.pentest-acao {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--borda);
+  border-radius: var(--raio, 8px);
+  background: var(--fundo-cartao, transparent);
+}
+
+.pentest-acao p { margin: 0.25rem 0 0; font-size: 0.9rem; }
+.pentest-acao > div { min-width: 0; }
+.pentest-acao button { flex: 0 0 auto; }
+
+@media (max-width: 640px) {
+  .pentest-acao { flex-direction: column; align-items: stretch; }
+  .pentest-acao button { width: 100%; }
+}
+
+/* ---------- Prédio único no tema ESCURO ----------
+   Mesmo caso do .card-predio: o override do material saiu junto com o vidro.
+   */
+
+/* As "janelas" da fachada eram riscos ESCUROS sobre o creme; no escuro elas
+   precisam ser riscos de LUZ, senão a faixa fica chapada e sem textura. */
+:root[data-theme='dark'] .predio-fachada {
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(255, 255, 255, 0.045) 0 2px,
+    transparent 2px 18px
+  );
+}
+
+/* A chamada do CEO e a vitrine usavam tinta com transparência calibrada para
+   fundo claro: sobre o escuro quase somem. Um pouco mais de presença aqui. */
+:root[data-theme='dark'] .predio-ceo-chamada {
+  background: color-mix(in srgb, #c4704b 16%, transparent);
+}
+:root[data-theme='dark'] .predio-ceo-chamada:hover {
+  background: color-mix(in srgb, #c4704b 26%, transparent);
+}
+:root[data-theme='dark'] .predio-vitrine,
+:root[data-theme='dark'] .predio-crescer {
+  background: rgba(255, 255, 255, 0.035);
+}
+
+/* ---------- Acompanhamento ao vivo: COLUNA da esquerda ----------
+
+   A placa nascia empilhada no TOPO do conteúdo: numa tarefa de 5 minutos ela
+   empurrava as abas e a lista para baixo a cada evento novo, e o dono perdia o
+   lugar onde estava lendo. Trabalho em andamento é informação de canto — quem
+   quer olhar, olha; quem quer trabalhar, trabalha.
+
+   POR QUE `fixed` E NÃO UMA COLUNA DE GRADE (as duas tentativas anteriores):
+
+   1. Grade fixa quebrava em repouso: `PlacaExecucao` NÃO RENDERIZA NADA sem
+      tarefa, e o conteúdo caía na trilha estreita — a tela inteira com 320px.
+   2. Grade com `:has()` + esticão resolvia isso, mas o esticão precisava saber
+      quanto sobra na margem, e `(100vw - 100%) / 2` é CIRCULAR: `100%` já é a
+      largura esticada. Resultado medido: placa de 101px e conteúdo inchado.
+
+   Tirando a placa do fluxo, o conteúdo não muda de largura NUNCA — nem em
+   repouso, nem em execução — e a placa ocupa a margem que já existia vazia.
+
+   Ago/2026 (menu lateral): a margem esquerda do conteúdo agora começa DEPOIS
+   da lateral de 252px, e o corpo cresceu para ~1080px — a conta e o
+   breakpoint mudaram juntos. Só a partir de 1800px a margem comporta uma
+   placa legível (>200px) sem cobrir nem a lateral nem o que se está lendo. */
+
+@media (min-width: 1800px) {
+  .simples-com-placa > .doca-placa-grupo {
+    position: fixed;
+    left: calc(252px + 16px);
+    top: 88px;
+    width: min(320px, calc((100vw - 252px - 1080px) / 2 - 32px));
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+    z-index: 20;
+  }
+}
+
+/* ── Cartão de MARCA na conversa (a IA propõe cor/diretriz) ──────────────
+   As cores vão em AMOSTRA porque quem lê esta tela reconhece o preto do time
+   dele, não o texto "#101010". */
+.conversa-marca-cores {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  list-style: none;
+  margin: 8px 0 4px;
+  padding: 0;
+}
+.conversa-marca-cores li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+}
+.conversa-marca-amostra {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  /* Contorno próprio: sem ele, uma amostra branca desaparece no cartão claro
+     e uma preta desaparece no tema escuro. */
+  box-shadow: inset 0 0 0 1px rgba(128, 128, 128, 0.45);
+  display: inline-block;
+}
+.conversa-marca-emoji {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: none;
+  font-size: 1.1rem;
+}
+.conversa-marca-diretriz {
+  margin: 6px 0 0;
+  font-size: 0.9rem;
+}
+
+/* A entrega acompanha a conversa; a prévia cabe na janela e mantém suas
+   proporções. No celular, o painel segue a rolagem da página. */
+.painel-trabalho {
+  flex: 0 0 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--bg-2);
+  box-shadow: inset 0 0 0 1px rgba(128, 128, 128, 0.18);
+  max-height: 100%;
+  overflow-y: auto;
+}
+.painel-trabalho > * { flex-shrink: 0; }
+.painel-trabalho-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.painel-trabalho-topo > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+.painel-trabalho-vivo {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-2);
+}
+.painel-trabalho-titulo { display: block; width: 100%; font-size: 1rem; }
+.painel-trabalho-pedido { display: -webkit-box; width: 100%; color: var(--text-2); font-size: .8rem; line-height: 1.4; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+.painel-trabalho-topo > button { flex-shrink: 0; min-width: 44px; min-height: 44px; }
+.painel-trabalho-voltar span { display: none; }
+.painel-trabalho-decisoes { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 12px 0 2px; margin-top: 8px; border-top: 1px solid var(--borda); background: var(--bg-2); }
+.painel-trabalho-decisoes :is(button, a) { min-height: 44px; }
+.painel-trabalho-decisoes .painel-baixar-tudo { margin-left: auto; }
+.painel-pecas {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  flex-shrink: 0;
+}
+.painel-peca {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.painel-peca-topo {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.painel-peca-nome {
+  font-size: 0.9rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* O player respeita a proporção do arquivo (9:16 aqui é a regra, não a
+   exceção) e nunca passa da largura da coluna. */
+.painel-trabalho .resultado-entrega__video,
+.painel-trabalho .resultado-entrega__img {
+  width: auto;
+  max-width: 100%;
+  max-height: min(36dvh, 460px);
+  object-fit: contain;
+  border-radius: 8px;
+  background: #000;
+  display: block;
+  margin-inline: auto;
+}
+.painel-trabalho .resultado-entrega__video { max-height: min(40dvh, 520px); }
+.painel-trabalho .resultado-entrega__audio {
+  width: 100%;
+}
+.painel-peca-acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.painel-trabalho .resultado-entrega__pagina { height: min(40dvh, 460px); }
+.painel-trabalho .resultado-entrega__midia { position: relative; }
+.painel-trabalho .resultado-entrega__acoes { position: absolute; top: 8px; right: 8px; margin: 0; }
+.painel-trabalho .resultado-entrega__acoes button { min-height: 44px; background: var(--bg-2); box-shadow: 0 1px 5px rgb(0 0 0 / .12); }
+.painel-entrega-resumo { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px; font-size: .85rem; }
+.painel-conferencia { margin: 8px 0 12px; color: var(--text-2); font-size: .85rem; line-height: 1.5; }
+.painel-seletor-post { display: flex; align-items: flex-end; gap: 6px; min-width: 0; }
+.painel-seletor-post label { flex: 1; min-width: 0; display: grid; gap: 4px; font-size: .85rem; }
+.painel-seletor-post select { width: 100%; min-width: 0; text-overflow: ellipsis; }
+.painel-seletor-post button { flex: 0 0 36px; min-height: 38px; font-size: 1.25rem; }
+.painel-baixar-tudo { align-self: flex-start; }
+.conversa-reabrir-painel {
+  align-self: flex-start;
+}
+
+@media (max-width: 900px) {
+  .painel-trabalho-topo { flex-wrap: wrap; }
+  .painel-trabalho-voltar { display: inline-flex; align-items: center; gap: 8px; }
+  .painel-trabalho-voltar span { display: inline; }
+  .painel-trabalho {
+    flex: 1 1 auto;
+    order: -1; /* acima do histórico: o resultado é o que ele veio ver */
+    max-height: none;
+    overflow: visible;
+  }
+  /* Limite do visor compartilhado, sem rolagem dentro do painel mobile. */
+  .painel-trabalho .resultado-entrega__video,
+  .painel-trabalho .resultado-entrega__img {
+    max-height: 40dvh;
+  }
+  .painel-trabalho .resultado-entrega__pagina { height: 40dvh; }
+  .painel-trabalho-decisoes .painel-baixar-tudo { margin-left: 0; }
+}
+
+/* Abas das VERSÕES no painel da entrega (com legenda / sem legenda / feed…).
+   Rolam na horizontal em vez de quebrar linha: três versões numa coluna de
+   320px caberiam, quatro empurrariam o player para baixo. */
+.painel-abas {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+.painel-aba {
+  flex: 0 0 auto;
+  border: 0;
+  cursor: pointer;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  background: transparent;
+  color: var(--text-2);
+  box-shadow: inset 0 0 0 1px rgba(128, 128, 128, 0.28);
+  min-height: 44px;
+  min-width: 64px;
+}
+.painel-aba.ativa {
+  background: var(--accent, #2f54c4);
+  color: var(--accent-ink, #fff);
+  box-shadow: none;
+  font-weight: 600;
+}
+
+/* ---------- O QUADRO "COMO FOI FEITA" de qualquer trabalho (15/08/2026) ----
+   Três colunas com arestas SVG medidas no DOM (components/predio/QuadroFluxo).
+   O irmão genérico do fluxo da peça: derivado do diário de execução, com a
+   placa de honestidade dizendo exatamente isso. */
+.fluxo { display: flex; flex-direction: column; gap: 12px; }
+.fluxo-topo { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.fluxo-topo strong { font-size: 1.05rem; }
+.fluxo-quadro { position: relative; overflow-x: auto; padding: 4px 2px 8px; }
+.fluxo-arestas { position: absolute; inset: 0; pointer-events: none; overflow: visible; }
+.fluxo-arestas path { fill: none; stroke: var(--borda-forte); stroke-width: 1.6; }
+.fluxo-arestas path.falta { stroke: var(--erro); stroke-dasharray: 5 4; }
+.fluxo-colunas {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(220px, 1fr));
+  gap: 44px;
+  min-width: 740px;
+  align-items: start;
+}
+.fluxo-col { display: flex; flex-direction: column; gap: 9px; min-width: 0; }
+.fluxo-col-titulo {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-2);
+}
+.fluxo-col-vazia { margin: 0; font-size: 0.85rem; }
+.fluxo-no {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  text-align: left;
+  padding: 9px 11px;
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-m);
+  background: var(--bg-2);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  min-width: 0;
+  transition: border-color 0.15s ease;
+}
+.fluxo-no:hover { border-color: var(--predio-primaria, var(--accent)); }
+.fluxo-no.sel {
+  border-color: var(--predio-primaria, var(--accent));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--predio-primaria, var(--accent)) 22%, transparent);
+}
+.fluxo-no.falta { border-color: color-mix(in srgb, var(--erro) 55%, var(--borda)); background: color-mix(in srgb, var(--erro) 6%, var(--bg-2)); }
+.fluxo-no.falta .fluxo-no-icone { color: var(--erro); }
+.fluxo-no.interno { opacity: 0.66; }
+.fluxo-no-icone { flex: none; margin-top: 2px; color: var(--text-1); }
+.fluxo-no-dados { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.fluxo-no-titulo { font-weight: 600; font-size: 0.9rem; line-height: 1.35; overflow-wrap: anywhere; }
+.fluxo-no-sub {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fluxo-no-selos { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 3px; }
+.fluxo-no-selos i {
+  font-style: normal;
+  font-size: 0.7rem;
+  color: var(--text-2);
+  border: 1px solid var(--borda);
+  border-radius: 999px;
+  padding: 0 7px;
+  background: var(--bg-1);
+}
+.fluxo-no-selos i.forte {
+  color: var(--predio-primaria, var(--accent));
+  border-color: color-mix(in srgb, var(--predio-primaria, var(--accent)) 45%, transparent);
+}
+.fluxo-acoes {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-wrap: wrap;
+  padding: 9px 12px;
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-m);
+  background: var(--bg-1);
+}
+.fluxo-troca {
+  border: 1px solid color-mix(in srgb, var(--predio-primaria, var(--accent)) 35%, var(--borda));
+  border-radius: var(--raio-m);
+  background: var(--bg-2);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.fluxo-troca-topo { display: flex; align-items: baseline; gap: 10px; justify-content: space-between; }
+.fluxo-troca-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+.fluxo-troca-lista button {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-s);
+  background: var(--bg-1);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.fluxo-troca-lista button:hover { border-color: var(--predio-primaria, var(--accent)); }
+.fluxo-troca-nome { display: block; font-size: 0.89rem; line-height: 1.4; }
+.fluxo-troca-meta { display: block; font-size: 0.74rem; color: var(--text-2); font-family: var(--font-mono); }
+.fluxo-troca-upload { cursor: pointer; align-self: flex-start; }
+.fluxo-troca-upload[aria-busy='true'] { opacity: 0.6; cursor: progress; }
+/* A placa de honestidade: o quadro é derivado do diário, e a tela diz isso. */
+.fluxo-honestidade {
+  margin: 0;
+  padding: 9px 12px;
+  border: 1px dashed var(--borda-forte);
+  border-radius: var(--raio-s);
+  font-size: 0.82rem;
+  color: var(--text-2);
+  line-height: 1.5;
+}
+
+/* ---- a bancada do Estúdio: todo trabalho abre no quadro ---- */
+.estudio-bancada-titulo { margin: 0; font-size: 1.02rem; display: flex; align-items: center; gap: 7px; }
+.estudio-trabalhos { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }
+.estudio-trabalho {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  padding: 9px 12px;
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-m);
+  background: var(--bg-2);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  min-width: 0;
+  transition: border-color 0.15s ease;
+}
+.estudio-trabalho:hover { border-color: var(--predio-primaria, var(--accent)); }
+.estudio-trabalho-titulo {
+  font-weight: 600;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.estudio-trabalho .texto-suave { flex: none; font-size: 0.82rem; }
+.estudio-trabalho-seta { margin-left: auto; flex: none; color: var(--text-2); }
+
+/* ---- as caixinhas do trabalho na conversa ---- */
+.conversa-caixinhas {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 8px 12px;
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-m);
+  background: color-mix(in srgb, var(--predio-primaria, var(--accent)) 6%, var(--bg-2));
+}
+
+/* ---------- ACERVO em abas (components/predio/AcervoTab, 16/08/2026) ------ */
+.acv { display: flex; flex-direction: column; gap: 14px; }
+.acv-topo { display: flex; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+.acv-topo > div { flex: 1 1 340px; min-width: 0; }
+.acv-topo h2 { margin: 0 0 3px; }
+.acv-topo .texto-suave { margin: 0; max-width: 64ch; }
+.acv-busca {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  background: var(--bg-2);
+  border: 1px solid var(--borda-forte);
+  border-radius: 999px;
+  padding: 8px 15px;
+  flex: 0 1 320px;
+  color: var(--text-2);
+}
+.acv-busca input { border: 0; background: none; outline: 0; padding: 0; width: 100%; color: var(--text-0); }
+
+.acv-abas { display: flex; gap: 2px; border-bottom: 1px solid var(--borda); overflow-x: auto; }
+.acv-aba {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 13px 11px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  background: none;
+  color: var(--text-1);
+  font: inherit;
+  font-size: 0.94rem;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.acv-aba:hover { color: var(--text-0); background: var(--hover); }
+.acv-aba.on {
+  color: var(--text-0);
+  font-weight: 600;
+  border-bottom-color: var(--predio-primaria, var(--accent));
+}
+.acv-aba svg { color: var(--text-2); }
+.acv-aba.on svg { color: var(--predio-primaria, var(--accent)); }
+.acv-aba-n {
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  color: var(--text-2);
+  background: var(--bg-1);
+  border: 1px solid var(--borda);
+  border-radius: 999px;
+  padding: 0 6px;
+}
+
+.acv-cabecalho { display: flex; align-items: flex-start; gap: 14px; flex-wrap: wrap; }
+.acv-descricao { margin: 0; flex: 1 1 320px; max-width: 62ch; }
+.acv-cabecalho-acoes { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.acv-enviar { cursor: pointer; }
+.acv-enviar[aria-busy='true'] { opacity: 0.6; cursor: progress; }
+/* O caminho real da pasta: para quem opera, não para o cliente ler. */
+.acv-caminho { font-size: 0.74rem; color: var(--text-2); background: var(--bg-1); border: 1px solid var(--borda); border-radius: var(--raio-s); padding: 2px 8px; }
+.acv-teto { margin: 0; padding: 9px 12px; border: 1px dashed var(--borda-forte); border-radius: var(--raio-s); }
+.acv-vazio { margin: 0; padding: 18px 16px; border: 1px dashed var(--borda); border-radius: var(--raio-m); }
+
+.acv-lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.acv-linha {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 10px 13px;
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-m);
+  background: var(--bg-2);
+}
+/* Arquivada: guardada e visivelmente FORA do repertório. */
+.acv-linha.arquivada { opacity: 0.55; }
+.acv-abrir { border: 0; background: none; padding: 0; cursor: zoom-in; flex: none; }
+.acv-thumb {
+  width: 46px;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--borda);
+  border-radius: 8px;
+  background: var(--bg-1);
+  overflow: hidden;
+  color: var(--text-2);
+}
+.acv-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.acv-dados { flex: 1; min-width: 0; }
+.acv-legenda { margin: 0; font-size: 0.94rem; line-height: 1.45; }
+.acv-meta {
+  display: block;
+  margin-top: 2px;
+  font-family: var(--font-mono);
+  font-size: 0.73rem;
+  color: var(--text-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.acv-tags { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 5px; }
+.acv-tags i {
+  font-style: normal;
+  font-size: 0.71rem;
+  color: var(--text-2);
+  background: var(--bg-1);
+  border: 1px solid var(--borda);
+  border-radius: 999px;
+  padding: 0 8px;
+}
+.acv-acoes { display: flex; align-items: center; gap: 7px; flex: none; flex-wrap: wrap; justify-content: flex-end; }
+.acv-mover { width: auto; font-size: 0.8rem; padding: 0.25rem 0.5rem; }
+.acv-uso {
+  border: 1px solid var(--borda-forte);
+  background: var(--bg-1);
+  border-radius: 999px;
+  padding: 2px 10px;
+  font: inherit;
+  font-size: 0.78rem;
+  color: var(--text-2);
+  cursor: pointer;
+}
+.acv-uso.on {
+  background: color-mix(in srgb, var(--ok) 14%, transparent);
+  border-color: color-mix(in srgb, var(--ok) 45%, transparent);
+  color: var(--ok-ink);
+}
+
+@media (max-width: 640px) {
+  .acv-linha { display: grid; grid-template-columns: 46px minmax(0, 1fr); }
+  .acv-acoes { grid-column: 1 / -1; justify-content: flex-start; }
+  .acv-acoes > button, .acv-mover { min-height: 44px; }
+  .acv-acoes > .botao-texto { min-width: 44px; }
+}
+
+/* O lightbox do acervo: abrir a imagem / tocar o vídeo sem sair da aba. */
+.acv-luz {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100dvh;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  border: 0;
+  color: inherit;
+  z-index: 70;
+  background: color-mix(in srgb, var(--tinta) 62%, transparent);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.acv-luz[open] { display: flex; }
+.acv-luz-caixa {
+  background: var(--bg-2);
+  border-radius: var(--raio-g);
+  box-shadow: var(--sombra-3);
+  max-width: min(880px, 94vw);
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.acv-luz-caixa header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 16px;
+  border-bottom: 1px solid var(--borda);
+}
+.acv-luz-caixa header button { min-width: 44px; min-height: 44px; flex-shrink: 0; }
+.acv-luz-caixa { min-width: 0; }
+.acv-luz-palco { display: grid; place-items: center; background: var(--bg-1); min-height: 0; flex: 1; overflow: auto; }
+.acv-luz-palco img { max-width: 100%; max-height: 62vh; display: block; }
+.acv-luz-legenda { margin: 0; padding: 12px 16px; font-size: 0.92rem; line-height: 1.5; }
+.estudio-trabalho-linha { display: flex; gap: 8px; align-items: center; }
+.estudio-trabalho-linha > .estudio-trabalho { flex: 1; min-width: 0; }
+
+/* O raciocínio da etapa (como-foi-feito.json): quatro campos fixos. */
+.fluxo-pq {
+  border: 1px solid color-mix(in srgb, var(--predio-primaria, var(--accent)) 32%, var(--borda));
+  border-radius: var(--raio-m);
+  background: var(--bg-2);
+  overflow: hidden;
+}
+.fluxo-pq-topo {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 10px 15px;
+  border-bottom: 1px solid var(--borda);
+  background: var(--bg-1);
+}
+.fluxo-pq dl { margin: 0; padding: 13px 15px; display: grid; grid-template-columns: 128px minmax(0, 1fr); gap: 10px 14px; }
+.fluxo-pq dt {
+  font-size: 0.73rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-2);
+  padding-top: 2px;
+}
+.fluxo-pq dd { margin: 0; font-size: 0.93rem; line-height: 1.55; }
+.fluxo-pq dd ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 5px; }
+.fluxo-pq dd li { display: flex; gap: 7px; align-items: flex-start; }
+.fluxo-pq dd li svg { flex: none; margin-top: 3px; color: var(--erro); }
+.fluxo-pq-provas { display: flex; gap: 6px; flex-wrap: wrap; }
+.fluxo-pq-prova {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.78rem;
+  border: 1px solid var(--borda);
+  background: var(--bg-1);
+  border-radius: 999px;
+  padding: 2px 9px;
+  font-family: var(--font-mono);
+}
+@media (max-width: 640px) { .fluxo-pq dl { grid-template-columns: 1fr; gap: 2px 0; } .fluxo-pq dd { margin-bottom: 8px; } }
+
+/* O gravador de voz na tela do porta-voz (16/08/2026). */
+.pv-gravador {
+  border: 1px solid color-mix(in srgb, var(--predio-primaria, var(--accent)) 35%, var(--borda));
+  border-radius: var(--raio-m);
+  background: var(--bg-1);
+  padding: 13px 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin-top: 4px;
+}
+/* O roteiro em voz editorial: é TEXTO PARA LER EM VOZ ALTA, não interface. */
+.pv-roteiro {
+  margin: 0;
+  padding: 11px 14px;
+  border-left: 3px solid var(--predio-primaria, var(--accent));
+  background: var(--bg-2);
+  border-radius: 0 var(--raio-s) var(--raio-s) 0;
+  font-family: var(--font-display);
+  font-size: 1.04rem;
+  line-height: 1.6;
+}
+.pv-dica { margin: 0; font-size: 0.85rem; }
+.pv-controles { display: flex; align-items: center; gap: 12px; }
+.pv-vivo {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--erro);
+  animation: balao-pulso 1.4s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) { .pv-vivo { animation: none; } }
+
+/* O TETO DE TOKENS (Sala das máquinas → Uso de IA). O painel deixou de falar
+   em dinheiro em 16/08/2026: token é o que o produto mede de verdade e o
+   único que vale em qualquer provedor. */
+.uso-teto {
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-m);
+  background: var(--bg-1);
+  padding: 12px 15px;
+  margin-top: 12px;
+}
+.uso-teto-topo { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+.uso-teto-pct { font-family: var(--font-mono); font-size: 0.88rem; color: var(--text-2); }
+.uso-teto-pct.alerta-alto { color: var(--coral-ink-forte); font-weight: 700; }
+.uso-teto .barra { height: 8px; border-radius: 999px; background: color-mix(in srgb, var(--text-2) 18%, transparent); overflow: hidden; }
+.uso-teto .barra i { display: block; height: 100%; border-radius: inherit; background: var(--predio-primaria, var(--accent)); transition: width .4s ease; }
+.uso-teto .barra i.cheio { background: var(--coral); }
+
+/* Conta que o servidor recusa excluir (a própria do operador, ADMIN_EMAILS):
+   no lugar do botão, um selo discreto que explica no title. */
+.admin-conta-protegida {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.82em;
+  color: var(--text-2);
+  border: 1px dashed var(--borda);
+  border-radius: var(--raio-s);
+  cursor: help;
+}
+
+/* Chips das tarefas prontas na conversa vazia: cardápio clicável no lugar da
+   caixa em branco. */
+.conversa-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.8rem; align-items: center; }
+.sabe-premissas-edicao { width: 100%; font-family: var(--font-mono, monospace); font-size: 0.85rem; line-height: 1.5; padding: 0.6rem; border: 1px solid var(--borda); border-radius: 6px; background: var(--bg-1); color: var(--text-0); }
+.fluxo-no-thumb { width: 34px; height: 34px; object-fit: cover; border-radius: 6px; flex-shrink: 0; border: 1px solid var(--borda); }
+.estudio-iniciar { margin-bottom: 16px; }
+.estudio-iniciar-form { display: flex; gap: 8px; align-items: flex-start; }
+.estudio-iniciar-form textarea { flex: 1; resize: vertical; min-height: 52px; padding: 0.55rem 0.7rem; border: 1px solid var(--borda); border-radius: 8px; background: var(--bg-1); color: var(--text-0); font: inherit; font-size: 0.92rem; }
+.fluxo-pq-faltou { color: var(--aviso); display: flex; gap: 0.35rem; align-items: baseline; }
+
+/* Cartão de TRABALHO na linha do tempo da conversa (24/08/2026 — "o chat
+   reflete as entregas"): o desfecho entra como parte da história. */
+.conversa-trabalho-cartao { border-left: 3px solid var(--accent); }
+.conversa-trabalho-topo { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.conversa-trabalho-entregas { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.conversa-trabalho-chip { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; border: 1px solid var(--borda); border-radius: 999px; padding: 2px 10px; }
+.conversa-trabalho-acoes { display: flex; gap: 10px; margin-top: 8px; }
+
+/* ============ O RESULTADO NA FRENTE (27/08/2026) ============
+   "nas entregas tem que ser só o resultado final… tudo bem visível."
+   A peça ocupa a tela; nome de arquivo e botões são detalhe. */
+.resultado-entrega__img,
+.resultado-entrega__video {
+  display: block;
+  width: 100%;
+  max-height: 72vh;
+  object-fit: contain;
+  border-radius: 12px;
+  background: #0a0a0a;
+  margin: 10px 0 4px;
+}
+.resultado-entrega__audio { width: 100%; margin: 10px 0 4px; }
+.resultado-entrega__midia { width: 100%; min-width: 0; }
+.resultado-entrega__acoes { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+.resultado-entrega__video-acoes { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 8px 0; }
+.resultado-entrega__video-acoes button { min-height: 44px; }
+.resultado-entrega__sequencia { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 10px 0; font-size: .85rem; }
+.resultado-entrega__sequencia button { min-width: 44px; min-height: 44px; font-size: 1.3rem; }
+.resultado-entrega__ampliada { box-sizing: border-box; width: min(1120px, calc(100vw - 24px)); height: min(900px, calc(100dvh - 24px)); max-width: none; max-height: calc(100dvh - 24px); padding: 0; border: 1px solid var(--borda); border-radius: 12px; background: var(--bg-1); color: var(--text-0); }
+.resultado-entrega__ampliada::backdrop { background: rgb(0 0 0 / .7); }
+.resultado-entrega__ampliada[open] { display: flex; flex-direction: column; }
+.resultado-entrega__ampliada > header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--borda); flex-shrink: 0; }
+.resultado-entrega__ampliada > header strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .9rem; }
+.resultado-entrega__ampliada > header button { flex: 0 0 auto; min-height: 44px; }
+.resultado-entrega__ampliada-controles { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; flex-shrink: 0; padding: 8px 16px; border-bottom: 1px solid var(--borda); }
+.resultado-entrega__ampliada-controles button { min-height: 44px; }
+.resultado-entrega__ampliada-controles small { color: var(--text-1); font-size: .8rem; }
+.resultado-entrega__ampliada-corpo { min-height: 0; flex: 1 1 0; display: grid; grid-template-rows: minmax(0, 1fr); place-items: center; overflow: hidden; overscroll-behavior: contain; }
+.resultado-entrega__ampliada-corpo img { display: block; width: auto; max-width: 100%; height: auto; max-height: 100%; object-fit: contain; margin: 0; }
+.resultado-entrega__ampliada-corpo .resultado-entrega__video-ampliado { display: block; width: 100%; height: 100%; min-height: 0; max-width: 100%; max-height: 100%; object-fit: contain; background: #000; }
+.resultado-entrega__ampliada-corpo--detalhes { display: block; overflow: auto; }
+.resultado-entrega__ampliada-corpo--detalhes img { max-width: none; max-height: none; }
+.painel-seletor-arquivo { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: .8rem; color: var(--text-1); }
+.painel-seletor-arquivo > span { flex-shrink: 0; }
+.painel-seletor-arquivo select { flex: 1 1 0; min-width: 0; min-height: 44px; width: 100%; }
+.resultado-entrega__sequencia button { min-width: 44px; min-height: 44px; }
+.conversa-nova-atividade { min-height: 44px; align-self: center; }
+.resultado-entrega__pagina {
+  display: block;
+  width: 100%;
+  height: min(70vh, 640px);
+  border: 1px solid var(--borda);
+  border-radius: 12px;
+  background: #fff;
+  margin: 10px 0 4px;
+}
+.resultado-entrega__carregar {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px dashed var(--borda);
+  background: transparent;
+  color: inherit;
+  border-radius: 10px;
+  padding: 14px 18px;
+  cursor: pointer;
+  margin: 10px 0 4px;
+}
+.resultado-entrega__carregar:hover { border-style: solid; }
+.resultado-entrega__carregar--visual { box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; width: 100%; min-height: min(32dvh, 280px); background: var(--bg-0); border-style: solid; gap: 12px; text-align: center; }
+.resultado-entrega__carregar--visual > svg { color: var(--accent); }
+.resultado-entrega__carregar--visual > span { color: var(--text-2); font-size: .85rem; }
+.resultado-entrega__carregar--visual:hover { background: var(--bg-1); border-color: var(--accent); }
+.resultado-entrega__abrindo { display: grid; gap: 12px; padding: 14px 0; color: var(--text-2); font-size: .85rem; }
+.resultado-entrega__abrindo--visual { min-height: min(32dvh, 280px); align-content: center; justify-items: center; }
+.resultado-entrega__abrindo--visual .esqueleto { width: 60%; }
+.resultado-entrega__erro { margin: 8px 0 2px; }
+.resultado-entrega__erro .botao { min-height: 44px; vertical-align: middle; }
+.etapa-visor--aberto { padding-top: 0; }
+/* Na Mesa a peça respira menos alto — e não nada em tarja preta (09/09/2026).
+   A regra base põe width:100% + object-fit:contain: com a gaveta larga do
+   editorial, uma arte 4:5 virava uma faixa no meio de ~700px de preto, e cada
+   entrega ocupava uma tela. Aqui a mídia manda na própria largura. */
+.mesa-entrega .resultado-entrega__img,
+.mesa-entrega .resultado-entrega__video {
+  width: auto; max-width: 100%; max-height: 44vh; margin-inline: auto;
+}
+.mesa-entrega .resultado-entrega__pagina { height: min(48vh, 460px); }
+.mesa-entrega { flex-wrap: wrap; }
+.mesa-entrega > .resultado-entrega__img,
+.mesa-entrega > .resultado-entrega__video,
+.mesa-entrega > .resultado-entrega__pagina,
+.mesa-entrega > .resultado-entrega__audio,
+.mesa-entrega > .resultado-entrega__carregar { flex: 1 1 100%; }
+
+/* ── Plano e Conversa minimizados sob o conteúdo final (27/08) ── */
+.entrega-secao {
+  margin: 8px 0 0;
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+  padding: 8px 12px;
+  background: color-mix(in srgb, currentColor 3%, transparent);
+}
+.entrega-secao > summary {
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: inherit;
+  opacity: 0.75;
+}
+.entrega-secao[open] > summary { margin-bottom: 8px; opacity: 1; }
+.entrega-secao__item { margin: 6px 0; }
+.entrega-secao__chat {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 4px 0 10px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+.entrega-chat__msg {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  max-width: 85%;
+}
+.entrega-chat__msg--dono {
+  align-self: flex-end;
+  background: color-mix(in srgb, currentColor 8%, transparent);
+}
+.entrega-chat__msg--ia {
+  align-self: flex-start;
+  background: color-mix(in srgb, currentColor 4%, transparent);
+}
+
+/* ── Comentários ancorados no "Como foi feita" (07/09/2026) ────────────────
+   O balão em cada nó, o formulário inline e a lista com as duas saídas
+   (vira tarefa / vira lição). Vive nos dois quadros e na Mesa.
+
+   09/09/2026 — reescrito nos tokens de verdade. A primeira versão usou
+   --acento, --superficie, --superficie-2, --texto-suave e --linha, que NÃO
+   existem em tokens.css: o fallback claro vencia sempre e o painel inteiro
+   ficava branco sobre o tema escuro. Aqui só entram tokens declarados. */
+.coment-botao { position: relative; display: inline-flex; }
+.coment-botao .botao-texto {
+  min-width: 28px; min-height: 28px; padding: 0 6px; border-radius: var(--raio-s);
+  display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+}
+.coment-botao .botao-texto:hover { background: var(--hover); }
+.coment-botao .coment-tem svg { color: var(--predio-primaria, var(--accent)); }
+.coment-contador {
+  display: inline-block; min-width: 16px; padding: 0 5px;
+  border-radius: 999px; background: var(--predio-primaria, var(--accent));
+  color: var(--accent-ink); font-size: 0.72rem; font-weight: 700;
+  line-height: 16px; text-align: center; vertical-align: middle;
+}
+.coment-form {
+  position: absolute; z-index: 30; top: calc(100% + 6px); right: 0; width: min(360px, 80vw);
+  display: grid; gap: 8px; padding: 10px 12px; border-radius: var(--raio-m);
+  background: var(--bg-2); border: 1px solid var(--borda);
+  box-shadow: var(--sombra-3); text-align: left; color: var(--text-0);
+}
+.coment-form textarea {
+  width: 100%; resize: vertical; font: inherit; font-size: 0.9rem; padding: 8px 10px;
+  color: var(--text-0); background: var(--bg-1);
+  border: 1px solid var(--borda); border-radius: var(--raio-s); box-sizing: border-box;
+}
+.coment-form-acoes { display: flex; gap: 10px; align-items: center; }
+.coment-lista {
+  margin: 14px 0 6px; padding: 12px 14px;
+  border: 1px solid var(--borda); border-radius: var(--raio-m); background: var(--bg-2);
+}
+.coment-lista-topo { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 8px; }
+.coment-lista-topo strong { display: inline-flex; align-items: center; gap: 6px; }
+.coment-lista ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.coment-item {
+  padding: 10px 12px; border-radius: var(--raio-s); background: var(--bg-1);
+  border-left: 3px solid var(--predio-primaria, var(--accent));
+}
+.coment-item.coment-resolvido, .coment-item.coment-licao, .coment-item.coment-tarefa {
+  border-left-color: var(--borda-forte); opacity: 0.85;
+}
+.coment-cabeca {
+  display: flex; justify-content: space-between; gap: 10px; font-size: 0.72rem;
+  text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-2);
+}
+.coment-ancora { font-weight: 700; }
+.coment-texto { margin: 6px 0 4px; white-space: pre-wrap; line-height: 1.5; }
+.coment-acoes { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 8px; }
+.coment-apagar { margin-left: auto; color: var(--text-2); }
+.coment-vazio { margin: 0; }
+.coment-mesa-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.coment-mesa-lista li { display: grid; gap: 6px; padding: 10px 12px; border-radius: var(--raio-s); background: var(--bg-1); }
+.coment-mesa-lista p { margin: 4px 0 0; white-space: pre-wrap; }
+
+/* ── Gaveta de Entregas agrupada por trabalho (08/09/2026) ── */
+.mesa-entrega__outros { flex: 1 1 100%; margin-top: 2px; }
+.mesa-entrega__outros > summary { cursor: pointer; font-size: 0.82rem; color: var(--text-2); }
+.mesa-entrega__outros ul { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 4px; }
+.mesa-entrega__outros li { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; font-size: 0.86rem; padding: 4px 0; border-top: 1px solid var(--borda); }
+.mesa-entrega__outro-nome { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Settings categories remain available on their direct page as well. */
+.config-categorias { display:flex; flex-wrap:wrap; gap:8px; margin:16px 0 24px; }
+.config-categorias button { border:1px solid var(--borda); border-radius:8px; background:var(--bg-2); color:inherit; padding:10px 14px; font:inherit; cursor:pointer; }
+.config-categorias button[aria-pressed=true] { border-color:var(--accent); color:var(--accent); }
+.config-grid[hidden] { display:none; }
+.lista-busca { display:grid; gap:6px; max-width:560px; margin:12px 0; font-size:13px; }
+.editorial__titulo strong, .acv-nome { overflow-wrap:anywhere; }
+
+.motor-emb-num { display:none; }
+.motor-emb-passo > summary { font-weight:600; cursor:pointer; }
+.motor-emb-passo > summary + .motor-emb-passo-titulo { margin-top:12px; }
+.agenda-sugestoes :is(button,span) { white-space:normal; overflow-wrap:anywhere; max-width:100%; }
+/* Preferências pessoais acessíveis também a membros sem gestão da empresa. */
+.conta-dialogo {
+  width: min(640px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  padding: 16px;
+  border: 1px solid var(--borda);
+  border-radius: 16px;
+  background: var(--bg-1);
+  color: var(--text-0);
+}
+.conta-dialogo::backdrop { background: rgb(0 0 0 / 35%); }
+.conta-dialogo-fechar { display: flex; justify-content: flex-end; margin-bottom: 8px; }
+.admin-exclusao-dialogo { width: min(520px, calc(100vw - 32px)); }
+.admin-exclusao-dialogo p { margin: 12px 0; overflow-wrap: anywhere; }
+.admin-exclusao-dialogo input { width: 100%; }
+.admin-exclusao-acoes { justify-content: flex-end; flex-wrap: wrap; margin-top: 18px; }
+.admin-acesso-dialogo p { margin: 12px 0; overflow-wrap: anywhere; }
+.admin-acesso-dialogo input { width: 100%; }
+.admin-acesso-acoes { justify-content: flex-end; flex-wrap: wrap; margin-top: 18px; }
+.admin-convites { margin-bottom: 20px; }
+.admin-convites td { overflow-wrap: anywhere; }
+.lgpd-exportar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 18px 0; }
+.lgpd-exportar > button { flex-shrink: 0; }
+.lgpd-exportar > span { flex: 1 1 220px; }
+.lgpd-perigo { border-top: 1px solid var(--borda); padding-top: 18px; margin-top: 20px; }
+.lgpd-perigo-cabecalho { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.lgpd-perigo-confirmar { display: grid; gap: 12px; margin-top: 14px; }
+.doca-fila { padding: 12px 16px; border: 1px solid var(--borda); border-radius: 12px; }
+.doca-fila summary { cursor: pointer; font-size: 13px; }
+.doca-fila ul { list-style: none; padding: 0; margin: 10px 0 0; display: grid; gap: 10px; }
+.doca-fila li { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.doca-fila li > span { min-width: 0; overflow-wrap: anywhere; }
+.doca-fila small { display: block; font-size: 12px; color: var(--text-2); }
+.doca-fila button { flex-shrink: 0; }
+.estudio-plano-voz { margin: 14px 0; display: grid; gap: 6px; }
+.estudio-plano-voz label { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.estudio-plano-voz select { max-width: 100%; padding: 8px 12px; border: 1px solid var(--borda); border-radius: 8px; background: var(--bg-1); color: var(--text-0); }
+.estudio-detalhes-producao { margin-top: 16px; }
+.estudio-detalhes-producao > summary { cursor: pointer; padding: 12px 0; font-weight: 600; }

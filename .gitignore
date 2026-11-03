@@ -1,0 +1,14 @@
+node_modules/
+dist/
+coverage/
+.vite/
+playwright-report/
+test-results/
+.env
+.env.*
+*.log
+*.db
+*.sqlite
+*.sqlite3
+.DS_Store
+Thumbs.db

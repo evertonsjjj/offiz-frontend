@@ -1,0 +1,18 @@
+/* O Estúdio também ocupa um painel estreito em telas grandes. */
+.estudio { container-type: inline-size; min-width: 0; }
+.estudio .estudio-iniciar-form textarea { min-width: 0; }
+.estudio .estudio-iniciar-form > .botao { min-height: 44px; }
+.estudio .alerta .botao-texto { display: inline-flex; align-items: center; min-height: 44px; }
+
+@container (max-width: 600px) {
+  .estudio-iniciar-form { flex-direction: column; align-items: stretch; }
+  .estudio-iniciar-form textarea { width: 100%; min-height: 88px; box-sizing: border-box; }
+  .estudio-iniciar-form > .botao { align-self: flex-start; max-width: 100%; white-space: normal; }
+  .estudio-trabalho-linha { flex-wrap: wrap; }
+  .estudio-trabalho-linha > .estudio-trabalho { flex-basis: 100%; }
+  .estudio-trabalho { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; }
+  .estudio-trabalho-titulo { grid-column: 1; grid-row: 1; white-space: normal; overflow-wrap: anywhere; }
+  .estudio-trabalho .texto-suave { grid-column: 1 / -1; grid-row: 2; overflow-wrap: anywhere; }
+  .estudio-trabalho .contador { grid-column: 2; grid-row: 1; }
+  .estudio-trabalho-seta { grid-column: 3; grid-row: 1; margin-left: 0; }
+}

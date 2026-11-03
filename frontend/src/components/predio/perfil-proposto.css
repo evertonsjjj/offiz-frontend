@@ -1,0 +1,17 @@
+.perfil-proposto > p { margin: 0 0 10px; }
+.perfil-proposto-secoes { display: grid; gap: 16px; margin: 18px 0; }
+.perfil-proposto-secao { display: grid; gap: 6px; min-width: 0; }
+.perfil-proposto-incluir { display: flex; align-items: flex-start; gap: 8px; font-weight: 600; }
+.perfil-proposto-incluir input[type='checkbox'] { flex: 0 0 auto; width: 16px; height: 16px; margin: 3px 0 0; }
+.perfil-proposto-secao textarea { box-sizing: border-box; width: 100%; min-height: 88px; font: inherit; font-size: 16px; line-height: 1.5; resize: vertical; }
+.perfil-proposto-secao textarea:disabled { opacity: .65; }
+.perfil-proposto-atual { border-left: 2px solid var(--borda); padding: 6px 10px; color: var(--text-2); font-size: .85rem; }
+.perfil-proposto-atual p { white-space: pre-wrap; overflow-wrap: anywhere; margin: 6px 0; }
+.perfil-proposto .conversa-sugestao-acoes { margin-top: 14px; }
+@media (max-width: 600px) {
+  .conversa-sugestao.perfil-proposto { max-width: 100%; width: 100%; box-sizing: border-box; }
+  .perfil-proposto .conversa-sugestao-acoes .botao { min-height: 44px; }
+  .perfil-proposto-incluir { min-height: 44px; }
+}
+.sab-conversa:has(.perfil-proposto) { max-height: none; }
+.sab-conversa:has(.perfil-proposto) .sab-fio { max-height: 220px; }

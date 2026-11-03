@@ -1,0 +1,85 @@
+OFFIZ — FRONTEND
+Fontes do frontend do Offiz — edição de 02/11/2026.
+
+O pacote contém o frontend React/TypeScript completo: aplicativo, UX, telas
+administrativas, página pública, estilos, componentes, assets e testes existentes.
+O backend continua em webapp/backend no projeto original e não vai neste ZIP.
+O motor desktop também é um backend: este repositório inclui sua tela de configuração
+em desktop-ui/motor.html e uma cópia de leitura do contrato preload-site.js.
+A maior parte da interface do desktop é o mesmo frontend web.
+Os dois arquivos em standalone/vendor/audio.js e audio.d.ts são o utilitário
+de conversão de áudio usado pelo frontend. Preserve essa pasta irmã ao lado
+de frontend; ela não contém servidor, motor de IA nem credenciais.
+
+COMEÇAR
+Instale Node.js 22.12 ou superior (a bancada foi usada com 22.23.4).
+Extraia o ZIP inteiro. No Terminal, entre na pasta frontend:
+  npm ci
+  npm run demo
+Abra http://127.0.0.1:5180/app?org=3&slug=conteudo&conversa=42&vista=conversa
+Página pública: http://127.0.0.1:5180/
+Entrega fictícia com arte e referências:
+http://127.0.0.1:5180/app?org=3&vista=biblioteca&trabalho=71&arquivo=91
+O PNG de exemplo foi produzido no teste local da marca fictícia Aurora;
+não é material de cliente nem prova de qualidade para outras marcas.
+O modo demo usa uma API de dados fictícios em 127.0.0.1:8188. Não chama IA,
+não precisa de conta e recusa escrita. Ele cobre as telas principais; uma rota
+não simulada informa que falta fixture. Os dados são para desenhar a interface,
+não para validar comportamento real da IA. Ctrl+C encerra os dois servidores.
+As portas devem estar livres. Não execute o demo na mesma origem da produção.
+
+TRABALHAR COM BACKEND REAL
+Use uma bancada isolada fornecida pelo responsável do backend. Configure
+VITE_API_URL com o endereço dela antes de executar npm run dev. Não coloque
+chaves de IA no frontend: variáveis VITE_* são públicas no navegador.
+Para testes reais da assinatura, é necessário o aplicativo/motor desktop
+pareado e autenticado; o modo demo não substitui essa integração.
+
+ONDE ALTERAR
+frontend/src/pages/Landing.tsx: página pública (confira as rotas em App.tsx).
+frontend/src/pages/Ceo.tsx: navegação principal da empresa.
+frontend/src/components/predio/ConversaTab.tsx: conversa e composição da mensagem.
+frontend/src/components/predio/PainelTrabalho.tsx: entrega ao lado da conversa.
+frontend/src/components/predio/BibliotecaProjetos.tsx: pedidos e entregas.
+frontend/src/components/predio/OrigemEntrega.tsx e QuadroFluxo.tsx: referências
+e histórico de produção. Leitura de arquivo não deve ser apresentada como
+prova de que ele foi aplicado; relato da IA não vira evidência independente.
+frontend/src/components/ConsumoIA.tsx: custo por chat e histórico mensal.
+frontend/src/components/predio/InformacoesConversa.tsx: botões e diálogos de
+custo/guia no cabeçalho, preservando espaço, rascunho e foco da conversa.
+frontend/src/components/predio/CasosTab.tsx e PecasCaso.tsx: cadastro jurídico,
+documentos, geração, ajustes e versões. Preserve o identificador do motor
+da janela nas solicitações; o backend decide pela conexão da empresa e
+reconfere acesso. Uma falha no motor local nunca deve virar tentativa de API.
+frontend/src/components/DownloadsMac.tsx e DownloadsWindowsZIP.tsx: opções de
+download. A base de Mac nativo só deve ser configurada com ZIPs e guias reais
+hospedados; os pacotes de preparação continuam identificados separadamente.
+frontend/src/pages/ConfigOrg.tsx: plano, consumo, conexões e configurações.
+frontend/src/styles e CSS ao lado dos componentes: aparência e responsividade.
+frontend/src/lib/api.ts, types.ts, motor-bridge.ts: contratos e transporte.
+desktop-ui/motor.html: tela nativa de configuração; não edite nomes IPC ou
+crie permissões novas. CONTRATO-preload-site.js é referência, não UI para copiar
+para uma página pública.
+
+FRONTEIRA COM O BACKEND
+contratos/openapi.json contém o contrato HTTP público da API local desta versão.
+Nenhuma senha, token, chave de IA, banco de dados ou acervo de cliente foi incluído.
+As rotas /internal e /managed não integram o contrato entregue ao frontend.
+Preserve autenticação, escopo por empresa/escritório/usuário e os identificadores
+de conversa, pedido e entrega. Não armazene segredos nem regras de cobrança
+somente no cliente. Mudança de contrato deve ser descrita para o responsável
+implementar no backend. Evite substituir a API real por dados fictícios no app.
+
+COMO PREPARAR ALTERAÇÕES
+Rode npm run build e os testes afetados. Confira desktop e celular, tema claro
+e escuro, loading, lista vazia, erro de rede, textos longos e navegação por teclado.
+Envie um ZIP só com fontes alteradas e assets novos, preservando os caminhos
+frontend/... e desktop-ui/motor.html. Inclua uma lista curta das mudanças e
+eventuais contratos novos. Não inclua node_modules, dist, .env, logs, dados,
+credenciais nem a pasta .git. Também é possível devolver toda a pasta de fontes
+limpa: o responsável compara com MANIFESTO-SHA256.json para aplicar as diferenças.
+O manifesto registra os arquivos originais, não os seus arquivos modificados.
+
+REPOSITÓRIO DO FRONTEND
+https://github.com/evertonsjjj/offiz-frontend
+Leia README.md para demonstração, build e integração com uma API isolada.

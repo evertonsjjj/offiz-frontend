@@ -1,0 +1,23 @@
+.config-organizacao .config-categorias {
+  gap: 6px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--borda);
+}
+.config-organizacao .config-categorias button { min-height: 44px; }
+.config-organizacao .config-categorias button:focus-visible,
+.config-chave-copiavel:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+.config-ferramentas-lista { list-style: none; margin: 1rem 0; padding: 0; }
+.config-ferramentas-lista li { display: flex; gap: 16px; align-items: center; justify-content: space-between; padding: 16px 0; border-bottom: 1px solid var(--borda); }
+.config-ferramentas-lista li:first-child { border-top: 1px solid var(--borda); }
+.config-ferramentas-lista li > div { display: flex; flex-direction: column; gap: 4px; }
+.config-ferramentas-lista li > div > span { color: var(--text-2); font-size: .9rem; }
+.config-copia-manual { margin: 1rem 0; padding: 16px; background: var(--bg-2); border: 1px solid var(--borda); border-radius: 8px; }
+.config-chave-copiavel { display: block; width: 100%; min-width: 0; resize: none; overflow-wrap: anywhere; font-family: var(--font-mono, monospace); padding: 10px; }
+@media (max-width: 600px) {
+  .config-organizacao .config-categorias { display: grid; grid-template-columns: 1fr 1fr; }
+  .config-organizacao .config-categorias button { text-align: left; padding: 10px; }
+  .config-ferramentas-lista li { align-items: flex-start; flex-direction: column; gap: 8px; }
+}

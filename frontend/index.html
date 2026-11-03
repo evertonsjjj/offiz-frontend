@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <script>
+      // Aplica o tema salvo antes da 1ª pintura (sem flash). Padrão: CLARO —
+      // tem que casar com lib/theme.ts, senão o app pisca escuro e corrige.
+      try {
+        document.documentElement.dataset.theme =
+          localStorage.getItem('offiz-theme') === 'dark' ? 'dark' : 'light'
+      } catch (e) {}
+    </script>
+    <title>Offiz — Sabatina e personalização da IA para sua marca</title>
+    <meta name="description" content="Serviço por contrato de sabatina, preparação e personalização da IA para sua marca. Organizamos contexto e referências para você produzir e revisar conteúdo no Offiz." />
+    <!-- A barra do navegador no celular pinta com isto, e precisa bater com
+         --bg-0 do tokens.css NOS DOIS TEMAS. Havia só a declaração clara: em
+         quem usava o tema escuro, a barra ficava creme por cima de um app
+         escuro — a única superfície do produto que o token não alcança. -->
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f5f5f7" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0e0e10" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Offiz" />
+    <meta property="og:locale" content="pt_BR" />
+    <meta property="og:title" content="Offiz — Sabatina e personalização da IA para sua marca" />
+    <meta property="og:description" content="Conhecemos sua marca na sabatina e preparamos a IA com seu contexto e referências. Ajustes, acompanhamento e uso do Offiz conforme o serviço contratado." />
+    <meta property="og:url" content="https://offiz.com.br" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Offiz — Sabatina e personalização da IA para sua marca" />
+    <meta name="twitter:description" content="Conhecemos sua marca na sabatina e preparamos a IA com seu contexto e referências. Ajustes, acompanhamento e uso do Offiz conforme o serviço contratado." />
+    <!-- Instrument Sans deixou de vir do Google Fonts (06/09/2026): é
+         self-hosted via @fontsource, importada em main.tsx como as outras. -->
+    <link rel="icon" type="image/svg+xml" href="/offiz-icon.svg" />
+    <!-- PNG, e não o mesmo SVG: o iOS não aceita SVG em apple-touch-icon —
+         ele ignora o link e usa um SCREENSHOT da página como ícone da tela de
+         início. São 180px, o tamanho que o iOS pede. -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

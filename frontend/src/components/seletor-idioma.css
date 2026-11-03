@@ -1,0 +1,17 @@
+.seletor-idioma { width: 100%; max-width: 380px; min-width: 0; }
+.seletor-idioma .campo { min-width: 0; }
+.seletor-idioma select { width: 100%; min-width: 0; min-height: 44px; }
+.seletor-idioma--compacto .campo > span { font-size: 12px; }
+.menu-usuario-acoes:has(.seletor-idioma) { flex-direction: column; align-items: stretch; gap: 14px; }
+.menu-usuario-acoes:has(.seletor-idioma) > button { align-self: flex-end; }
+.auth-card > .seletor-idioma { margin-bottom: 24px; }
+.lp-nav > .seletor-idioma { width: 124px; flex: 0 0 124px; }
+.lp-nav .seletor-idioma .campo > span {
+  position: absolute; width: 1px; height: 1px; padding: 0;
+  overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+}
+.lp-nav .seletor-idioma select { font-size: 13px; padding: 9px; }
+@media (max-width: 420px) {
+  .lp-nav { gap: 10px; }
+  .lp-nav > .seletor-idioma { width: 113px; flex-basis: 113px; }
+}

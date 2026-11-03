@@ -1,0 +1,3178 @@
+/* ============================================================
+   A CHROME VIVA — o que sobrou quando a shell "visionOS Adamá" saiu.
+
+   Este arquivo começava com ~470 linhas de uma interface inteira:
+   rail de vidro fosco à esquerda, doca com o diorama 3D dos bonecos,
+   os 7 C's como mobília, abas de vidro com backdrop-filter, seções
+   empilhadas com esqueleto de rolagem. Aquele desenho foi aposentado
+   pelo redesenho clássico de jul/2026 e o CSS ficou — 39 classes sem
+   um único consumidor no app.
+
+   Ficaram aqui as três coisas que aquele bloco tinha de VIVO e que a
+   ShellSimples continua usando: o avatar do topo, o loader de página
+   e a PLACA DE EXECUÇÃO (o letreiro do que está rodando agora), que
+   herdou o prefixo `doca-` de quando morava na doca do diorama. O
+   prefixo ficou porque renomear ~40 seletores para ganhar um nome
+   melhor não paga o risco; este comentário é a tradução.
+   ============================================================ */
+
+/* -------------------- Avatar da conta (MenuUsuario) -------------------- */
+.shell-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 0;
+  background: var(--accent-fundo);
+  color: var(--accent-ink);
+  font: 700 15px/1 var(--font-body);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+.shell-avatar:hover { filter: brightness(1.06); }
+
+/* -------------------- Loader de página inteira -------------------- */
+.shell-palco-carregando { display: grid; place-items: center; min-height: 60vh; }
+
+.shell-rodape-pagina {
+  display: flex;
+  justify-content: center;
+  padding: 24px 0 8px;
+  opacity: .55;
+}
+
+/* ==================== PLACA DE EXECUÇÃO ====================
+   O letreiro vivo: o que está sendo feito agora (título, % e log) e o
+   aviso coral quando algo espera o seu OK. Em repouso não renderiza
+   nada — a página fica limpa. */
+
+/* ---- Balão de log: o que está acontecendo agora ---- */
+.doca-balao {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border-radius: 16px;
+  padding: 10px 14px;
+}
+.doca-balao-led {
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: balao-pulso 1.6s ease-in-out infinite;
+}
+.doca-balao.needs-you .doca-balao-led { background: var(--coral); }
+/* Fonte do CORPO, não a mono. Os dois balões que existem falam com o dono —
+   "3 entregas esperam o seu OK" e "2 tarefas rodando" — e nenhum carrega
+   linha de log. Em mono a frase ficava com cara de terminal e, na coluna de
+   ~300px que a placa ocupa, quebrava no meio ("…abrir / Entregas"). */
+.doca-balao-texto {
+  font: 500 13px/1.45 var(--font-body);
+  color: var(--text-0);
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+@keyframes balao-pulso {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 45%, transparent); }
+  60% { box-shadow: 0 0 0 6px transparent; }
+}
+.doca-balao.needs-you .doca-balao-led {
+  animation-name: balao-pulso-coral;
+}
+@keyframes balao-pulso-coral {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--coral) 50%, transparent); }
+  60% { box-shadow: 0 0 0 6px transparent; }
+}
+
+/* ---- Placa: título + barra de % + log ---- */
+.doca-placa-grupo { display: flex; flex-direction: column; gap: 8px; overflow-x: hidden; }
+.doca-confirmar-parada { display: flex; flex-direction: column; gap: 10px; padding: 16px; border: 1px solid var(--borda-forte); border-radius: var(--raio-s); background: var(--bg-2); }
+.doca-confirmar-parada p { margin: 0; overflow-wrap: anywhere; }
+.doca-confirmar-parada > div { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* "Ver cada passo": o diário completo do trabalho abre AO LADO da placa em
+   tela larga (o pedido do dono: o log à direita, com o que cada agente está
+   fazendo) e ABAIXO em tela estreita — nada de painel flutuante.
+
+   A medida é do CONTÊINER, não da janela: uma media query de viewport dividia
+   o espaço da placa em dois e o título da tarefa sumia. Onde o grupo tem menos
+   de 700px de largura, o diário empilha embaixo. */
+.doca-placa-grupo { container-type: inline-size; }
+.doca-placa-conjunto { display: flex; flex-direction: column; gap: 8px; }
+@container (min-width: 700px) {
+  .doca-placa-conjunto.com-log {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+    align-items: start;
+  }
+}
+.doca-placa-passos { border-radius: 16px; padding: 10px 12px; }
+/* O .stream nasceu para uma aba inteira (56vh); aqui é um painel lateral. */
+.doca-placa-passos .stream { min-height: 140px; max-height: 300px; }
+/* "ver cada passo" é a única porta do diário — alvo de clique gordo. */
+.doca-placa-tempo .botao-texto { padding: 4px 9px; }
+.doca-balao-btn { cursor: pointer; border: 0; text-align: left; width: 100%; }
+.doca-balao-btn:hover .doca-balao-texto { text-decoration: underline; }
+.doca-placa {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  border-radius: 16px;
+  padding: 11px 14px 12px;
+}
+/* A placa vive numa coluna de 320px (app.css, >=1800px). "há 11min 45s ·
+   ver cada passo · dispensar" não cabe ao lado do nome: o nome encolhia a
+   ZERO (nowrap + ellipsis) e sobrava uma barra de rolagem horizontal dentro
+   da placa — visto na demo de 04/09. Agora o topo quebra linha: nome em cima
+   (até 2 linhas), tempo e botões embaixo. A placa de falha já fazia isto. */
+.doca-placa-topo { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 9px; min-width: 0; }
+.doca-placa-titulo {
+  flex: 1 1 150px;
+  min-width: 0;
+  font: 650 13.5px/1.3 var(--font-body);
+  color: var(--text-0);
+  white-space: normal;
+  overflow-wrap: anywhere;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+/* A fileira "há 12min · ver cada passo · dispensar · parar" é UMA frase em
+   mono: com `flex: none` ela não quebrava e o último botão ficava fora dos
+   320px da coluna (visto em 05/09, com o "parar" recém-nascido cortado).
+   Agora ela ocupa a linha inteira e quebra entre os botões. */
+.doca-placa-tempo {
+  flex: 1 1 100%;
+  min-width: 0;
+  font: 500 11.5px/1.6 var(--font-mono);
+  color: var(--text-2);
+  white-space: normal;
+}
+.doca-placa-barra {
+  position: relative;
+  height: 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--text-2) 18%, transparent);
+  overflow: hidden;
+}
+.doca-placa-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 55%, var(--accent-suave)));
+  transition: width 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+}
+/* Sem marcador ainda: a barra respira (indeterminada) em vez de mentir um nº. */
+.doca-placa-barra.indeterminada .doca-placa-fill {
+  width: 32%;
+  animation: placa-vaivem 2.2s ease-in-out infinite;
+}
+@keyframes placa-vaivem {
+  0% { left: -32%; }
+  100% { left: 100%; }
+}
+.doca-placa-log {
+  font: 500 12px/1.45 var(--font-mono);
+  color: var(--text-1);
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+/* O sinal da ação no log ao vivo (era emoji dentro da própria frase): traço
+   em currentColor, alinhado à linha da fonte mono. */
+.doca-placa-log-icone { vertical-align: -0.18em; margin-right: 5px; opacity: 0.85; }
+.doca-placa-pct { color: var(--accent); font-weight: 700; margin-right: 7px; }
+@media (prefers-reduced-motion: reduce) {
+  .doca-placa-barra.indeterminada .doca-placa-fill { animation: none; left: 0; }
+  .doca-balao-led { animation: none; }
+}
+
+/* ==================== A SHELL ÚNICA ====================
+   Desenho de ago/2026 ("tipo o Paperclip"): menu LATERAL fixo com as
+   portas do escritório, bastidor do operador e o Guia no rodapé;
+   conteúdo à direita com barra de migalha em cima. Tipografia maior e
+   alvos generosos continuam decisão de persona (60+). */
+.simples {
+  min-height: 100dvh;
+  display: flex;
+  align-items: stretch;
+  font-size: 1.0625rem;
+}
+
+/* ---- O menu lateral ---- */
+.simples-lateral {
+  width: 252px;
+  flex: 0 0 252px;
+  position: sticky;
+  top: 0;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 10px;
+  border-right: 1px solid var(--borda);
+  background: var(--bg-1);
+  overflow-y: auto;
+  z-index: 40;
+}
+.simples-lateral-topo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 8px 12px;
+  border-bottom: 1px solid var(--borda);
+  min-width: 0;
+}
+.simples-logo { display: inline-flex; align-items: center; }
+.simples-titulos { display: flex; flex-direction: column; min-width: 0; }
+.simples-org {
+  font-size: 1.02rem;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.simples-office {
+  font-size: 0.85rem;
+  color: var(--text-2);
+  opacity: 0.85;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.simples-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+.simples-nav-titulo {
+  margin: 12px 8px 4px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-2);
+  opacity: 0.8;
+}
+.simples-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px; /* alvo de toque (iOS/WCAG) — persona 60+ */
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+  text-decoration: none;
+  font: inherit;
+  font-size: 0.98rem;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.simples-item:hover { background: var(--hover, var(--bg-2)); }
+.simples-item.ativo {
+  background: var(--bg-2);
+  border-color: var(--borda);
+  font-weight: 600;
+}
+/* O fio da esquerda marca a porta aberta — a pista que não depende de cor. */
+.simples-item.ativo::before {
+  content: '';
+  position: absolute;
+  left: -10px;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  border-radius: 2px;
+  /* O fio da porta aberta é MARCA do cliente, não estado — é o único lugar da
+     navegação que veste a cor do prédio. O resto do --accent deste arquivo fica
+     como está: led da placa, barra de progresso e cartão vivo são estado. */
+  background: var(--predio-primaria, var(--accent));
+  /* Ao ativar, o fio CRESCE de baixo para cima (redesign ago/2026) — a
+     animação re-dispara porque o ::before nasce junto com a classe .ativo. */
+  transform-origin: bottom;
+  animation: fio-cresce 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes fio-cresce { from { transform: scaleY(0); } }
+/* O ícone do menu é SVG de traço em currentColor: ele herda a tinta da linha,
+   fica azul junto com o item ativo e coral onde o texto for coral — sem uma
+   regra de cor por ícone.
+
+   SEM `margin: 0 auto` AQUI. A caixa de 24px veio de quando aqui morava um
+   emoji, e junto veio o `auto` que o centrava. Só que `.simples-item` é FLEX:
+   margem `auto` em item flex não centra o ícone na caixa dele, ela ABSORVE a
+   sobra da linha inteira — metade antes do ícone, metade depois. O resultado
+   era cada ícone num x diferente (quanto mais curto o rótulo, mais à direita)
+   e todos os rótulos grudados na borda direita do menu. O `flex: 0 0 24px` já
+   fixa a caixa; não precisa de margem nenhuma. */
+.simples-item-icone {
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  display: block;
+  color: var(--text-1);
+}
+.simples-item.ativo .simples-item-icone { color: var(--predio-primaria, var(--accent)); }
+.simples-item:hover .simples-item-icone { color: var(--text-0); }
+/* O sinal do andar na barra de migalha e no topo do menu: menor, alinhado à
+   linha de texto (o SVG é `inline` e senta na base sem este ajuste). */
+.simples-marca-icone { vertical-align: -0.2em; color: var(--text-2); }
+.simples-item-rotulo {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.simples-item .contador { margin-left: auto; }
+
+.simples-lateral-rodape {
+  border-top: 1px solid var(--borda);
+  padding-top: 8px;
+}
+
+/* O véu atrás da gaveta (só no celular, só com ela aberta). */
+.simples-veu {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 35;
+  border: 0;
+  background: color-mix(in srgb, #000 40%, transparent);
+  cursor: pointer;
+}
+
+/* ---- A coluna de conteúdo ---- */
+.simples-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.simples-topo {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px clamp(14px, 3vw, 24px);
+  border-radius: 0;
+  border-bottom: 1px solid var(--borda);
+}
+.simples-hamburger {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid var(--borda);
+  background: var(--papel);
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+.simples-migalha {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+  font-size: 1rem;
+}
+.simples-migalha-office {
+  color: var(--text-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* O BRASÃO no lugar do emoji: quadrado, contido (logo alto ou largo não
+   distorce) e alinhado à linha de texto — sem o `vertical-align` ele senta na
+   linha de base e empurra a linha inteira alguns pixels para cima. A altura
+   acompanha a fonte (em, não px) para o logo não crescer sozinho quando o
+   rótulo diminui no celular. */
+.simples-brasao {
+  width: 1.35em;
+  height: 1.35em;
+  object-fit: contain;
+  vertical-align: -0.28em;
+  border-radius: 3px;
+}
+/* O brasão nos outros dois lugares onde o prédio aparece como ícone: o rail de
+   troca (quadrado de vidro) e o cartão do andar em "Meu prédio". Herda o
+   arredondamento do contêiner para não vazar canto quadrado dentro do círculo. */
+.shell-office-brasao,
+.andar-brasao {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 4px;
+  border-radius: inherit;
+  display: block;
+}
+.simples-migalha-separador { color: var(--text-2); opacity: 0.6; }
+.simples-migalha-aba { white-space: nowrap; }
+.simples-acoes { display: flex; align-items: center; gap: 10px; }
+
+.simples-corpo {
+  width: min(100%, 1080px);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px clamp(12px, 3vw, 24px) 28px;
+  flex: 1;
+}
+
+/* Troca de aba com fade curto (redesign ago/2026): os painéis alternam por
+   display:none, e sair de none REINICIA a animação — é assim que revisitar
+   uma aba re-dispara a entrada, sem transição pendurada em re-render. */
+.simples-painel { width: 100%; animation: painel-entra 150ms ease; }
+@keyframes painel-entra { from { opacity: 0; } }
+
+/* O Estúdio precisa de palco: fluxo + chat lado a lado não cabem na coluna
+   de leitura de 1080px. Só esta aba alarga — as outras seguem como estão. */
+.simples-corpo--palco { width: min(100%, 1760px); }
+
+/* Celular/tablet estreito: o menu vira GAVETA (off-canvas) e o topo ganha o
+   trinco ☰. A gaveta cobre por cima; o véu fecha no toque. */
+@media (max-width: 880px) {
+  .simples { font-size: 1rem; }
+  .simples-lateral {
+    position: fixed;
+    left: 0;
+    top: 0;
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+    box-shadow: var(--sombra-2, 0 8px 30px rgba(0, 0, 0, 0.25));
+  }
+  .simples-lateral.aberta { transform: translateX(0); }
+  .simples-veu { display: block; }
+  .simples-hamburger { display: inline-flex; }
+  .simples-migalha-office { display: none; }
+  .simples-migalha-separador { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .simples-lateral { transition: none; }
+}
+
+/* ==================== "O que eu já sei" (modo simples) ====================
+   O conhecimento do escritório em LEITURA, na linguagem do dono. Blocos
+   grandes, sem markdown cru, sem jargão: cada grupo explica o que é e leva
+   um atalho para perguntar sobre aquilo na conversa. */
+.sabe { display: flex; flex-direction: column; gap: 22px; }
+.sabe-intro {
+  margin: 0;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid var(--borda);
+  background: var(--papel);
+  line-height: 1.5;
+}
+.sabe-bloco { display: flex; flex-direction: column; gap: 12px; }
+.sabe-bloco-topo {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.sabe-bloco-topo h3 { margin: 0 0 2px; font-size: 1.15rem; }
+.sabe-bloco-topo p { margin: 0; font-size: 0.95rem; }
+.sabe-lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.sabe-card {
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid var(--borda);
+  background: var(--papel);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.sabe-card-titulo { font-size: 1.02rem; }
+
+/* Materiais da empresa: o <label> É o botão de enviar (o input fica oculto). */
+.sabe-subir { cursor: pointer; }
+.sabe-subir[aria-busy='true'] { opacity: 0.6; cursor: progress; }
+
+/* Os cards do acervo (documentos / exemplos de posts / fotos do produto):
+   lado a lado quando cabem, empilhados no celular. A auditoria pegou estas
+   classes usadas sem CSS — os três cards saíam colados, indistinguíveis. */
+.sabe-cartoes-acervo {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 12px;
+}
+.sabe-cartao-acervo .sabe-subir { align-self: flex-start; margin-top: auto; }
+.sabe-acervo-vazio {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px dashed var(--borda);
+  border-radius: 10px;
+}
+.sabe-lista-materiais {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.sabe-material {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--borda);
+  background: var(--papel);
+}
+/* O nome fica com toda a sobra e trunca: arquivo de nome quilométrico não
+   pode empurrar o botão de excluir para fora da linha. */
+.sabe-material-nome {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sabe-material .texto-suave { flex: 0 0 auto; font-size: 0.88rem; }
+
+/* O veredito da IA sobre a foto do porta-voz. Verde é EVIDÊNCIA (a foto
+   serve), coral é "precisa de você" — nunca vermelho de erro: a foto não
+   quebrou nada, ela só rende menos. E o bloco sempre termina com a saída
+   aberta ("gero assim mesmo"), porque conselho que vira portão vira briga. */
+.pv-veredito {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--borda);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  line-height: 1.5;
+}
+.pv-veredito p { margin: 0; }
+.pv-veredito-titulo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+.pv-veredito-lista {
+  margin: 0;
+  padding-left: 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.pv-veredito-boa {
+  border-color: var(--ok);
+  background: var(--ok-suave);
+  color: var(--ok-ink);
+}
+.pv-veredito-ajustar,
+.pv-veredito-ruim {
+  border-color: var(--coral);
+  background: var(--coral-suave);
+  color: var(--coral-ink-forte);
+}
+/* "Não serve" pesa mais que "dá para melhorar" sem trocar de cor: a borda
+   marca a lateral, do jeito que uma citação marca. */
+.pv-veredito-ruim { border-left-width: 4px; }
+.pv-veredito-saida { font-style: italic; }
+.pv-veredito .pv-conferir { align-self: flex-start; margin-top: 2px; }
+
+/* Regra trocada: a antiga riscada e apagada, a nova em pé. O contraste entre
+   as duas é a informação — quem bate o olho tem que ver, sem ler, qual caiu. */
+.sabe-trocada { opacity: 0.65; line-height: 1.5; }
+.sabe-trocada s { text-decoration-thickness: 1px; }
+.sabe-vigente { line-height: 1.5; }
+.sabe-regras { margin: 0; padding-left: 1.15rem; display: flex; flex-direction: column; gap: 6px; line-height: 1.5; }
+.sabe-motivo { margin: 0; line-height: 1.45; }
+.sabe-selo { color: var(--ok); }
+.sabe-grupo { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+.sabe-grupo-titulo { font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.04em; opacity: 0.75; }
+.sabe-vazio {
+  padding: 18px 16px;
+  border-radius: 14px;
+  border: 1px dashed var(--borda);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: flex-start;
+  line-height: 1.5;
+}
+.sabe-vazio p { margin: 0; }
+/* O estado vazio ILUSTRADO (redesign ago/2026): a estante no traço da casa,
+   centrada — objetos, nunca pessoas. */
+.sabe-vazio--estante { align-items: center; text-align: center; gap: 6px; padding: 32px 20px; }
+.sabe-vazio--estante p { max-width: 46ch; }
+.sabe-vazio--estante .botao { margin-top: 12px; }
+.sabe-estante { color: var(--text-2); opacity: 0.7; margin-bottom: 6px; }
+.sabe-vazio-titulo {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.15rem;
+}
+.sabe-premissas {
+  margin: 0;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid var(--borda);
+  background: var(--papel);
+  white-space: pre-wrap;
+  font: inherit;
+  line-height: 1.5;
+}
+
+/* Avatar do topo simples no mesmo alvo de 44px dos atalhos. */
+.simples .shell-avatar,
+.simples-acoes button,
+.simples-acoes a { min-width: 44px; min-height: 44px; }
+
+
+/* ==================== VISÃO GERAL (dashboard) ====================
+   A aba inicial: números do mês, última execução, a faixa de atividade
+   de 14 dias e as entregas recentes. Cores de STATUS vêm dos tokens
+   semânticos (--ok/--erro/--accent) — nunca cor decorativa. */
+.dash { display: flex; flex-direction: column; gap: 14px; }
+
+/* A manchete do dia (redesign ago/2026): a serifa — que na shell só vivia em
+   títulos frios — diz o que importa AGORA, acima dos cards. */
+.dash-manchete { display: flex; flex-direction: column; gap: 2px; }
+.dash-manchete h2 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  font-size: 1.45rem;
+  line-height: 1.3;
+  margin: 0;
+  text-wrap: pretty;
+}
+.dash-manchete p { margin: 0; font-size: 0.85rem; }
+
+.dash-ultima {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  border: 1px solid var(--borda);
+  background: var(--papel);
+  min-width: 0;
+}
+.dash-ultima-titulo {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+.dash-ultima-quando { margin-left: auto; white-space: nowrap; font-size: 0.9rem; }
+
+.dash-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 12px;
+}
+.dash-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid var(--borda);
+  background: var(--papel);
+  color: inherit;
+  text-align: left;
+  font: inherit;
+  min-width: 0;
+}
+.dash-card-botao { cursor: pointer; transition: border-color 0.15s ease, transform 0.15s ease; }
+.dash-card-botao:hover { transform: translateY(-1px); border-color: var(--accent); }
+/* Coral é reservado a "precisa de você" — aqui é exatamente isso. */
+.dash-destaque { border-color: color-mix(in srgb, var(--coral) 55%, transparent); }
+.dash-card-rotulo {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-2);
+}
+/* Tabular: o contador que sobe (ContadorAnimado) não faz o card "dançar". */
+.dash-card-numero { font-size: 1.9rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.dash-card-sub { font-size: 0.88rem; }
+.dash-card-vivo { border-color: color-mix(in srgb, var(--accent) 45%, transparent); }
+.dash-card-agora {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dash-bloco {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid var(--borda);
+  background: var(--papel);
+}
+.dash-bloco-topo {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.dash-bloco-topo h3 { margin: 0; font-size: 1.05rem; }
+
+/* A faixa de atividade: 14 colunas, barras empilhadas ancoradas embaixo.
+   2px de respiro entre segmentos (o espaçador conta a separação). */
+.dash-faixa {
+  display: grid;
+  grid-template-columns: repeat(14, 1fr);
+  gap: 6px;
+  align-items: end;
+  height: 88px;
+}
+.dash-dia { display: flex; align-items: flex-end; height: 100%; }
+.dash-barra {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 2px;
+  width: 100%;
+  max-width: 26px;
+  margin: 0 auto;
+  height: 100%;
+}
+.dash-seg { display: block; width: 100%; border-radius: 3px; min-height: 4px; }
+.dash-seg-ok { background: var(--ok); }
+.dash-seg-erro { background: var(--erro); }
+.dash-seg-ativa { background: var(--accent); }
+.dash-seg-cancelada { background: var(--text-2); opacity: 0.45; }
+.dash-faixa-eixo {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+}
+.dash-faixa-vazia { margin: 0; padding: 10px 0; }
+.dash-legenda {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  font-size: 0.85rem;
+  color: var(--text-2);
+}
+.dash-legenda li { display: inline-flex; align-items: center; gap: 6px; }
+.dash-legenda-ponto {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+.dash-entregas {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.dash-entrega {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--borda);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  min-width: 0;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.dash-entrega:hover { border-color: var(--accent); background: var(--hover, var(--bg-2)); }
+.dash-entrega-nome {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+.dash-entrega-job {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.88rem;
+}
+.dash-entrega-quando { margin-left: auto; white-space: nowrap; font-size: 0.85rem; }
+.dash-entrega .status-pill { flex: 0 0 auto; }
+
+@media (max-width: 640px) {
+  .dash-entrega-job { display: none; }
+  .dash-faixa { gap: 3px; }
+}
+
+/* ---- Setup (a sabatina na Visão geral) ---- */
+.dash-setup { display: flex; flex-direction: column; gap: 6px; }
+.dash-setup-depois { align-self: flex-end; font-size: 0.9rem; }
+.dash-setup-reabrir {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px dashed var(--borda);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+.dash-setup-reabrir:hover { border-color: var(--accent); }
+
+/* ==================== SABATINA DE SETUP ====================
+   A entrevista do primeiro dia, redesenhada em 15/08/2026. Era um chat de
+   balões dentro de um card; virou a TELA — uma pergunta por vez em voz
+   editorial à esquerda, e à direita a ficha (o Cânon nascendo) mais o balcão
+   de arquivos. Ver components/predio/SetupSabatina.tsx. */
+.dash-so-setup { gap: 8px; }
+.dash-so-setup .dash-setup-depois { align-self: center; font-size: 0.88rem; opacity: 0.75; }
+.dash-so-setup .dash-setup-depois:hover { opacity: 1; }
+
+.sab {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-g);
+  background: var(--bg-2);
+  overflow: hidden;
+  box-shadow: var(--sombra-2);
+}
+
+/* ---- topo: o selo e os cinco traços ---- */
+.sab-topo {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 22px;
+  border-bottom: 1px solid var(--borda);
+  background: var(--bg-1);
+}
+.sab-selo {
+  font-size: 0.72rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-2);
+}
+.sab-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.95fr);
+}
+.sab-esq { padding: 34px 30px 30px; }
+.sab-dir {
+  padding: 24px 24px 30px;
+  background: var(--bg-1);
+  border-left: 1px solid var(--borda);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.sab-secao {
+  margin: 0 0 12px;
+  font-size: 0.72rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-2);
+}
+
+/* A pergunta é a frase mais importante do primeiro dia — é a única do produto
+   que ganha a serifa em corpo grande. */
+.sab-pergunta {
+  font-family: var(--font-display);
+  font-size: 1.65rem;
+  line-height: 1.3;
+  margin: 0 0 10px;
+}
+.sab-ajuda { margin: 0 0 20px; color: var(--text-2); font-size: 0.94rem; max-width: 52ch; }
+
+/* O tamanho do campo é uma PROMESSA da quantidade de texto esperada: o de
+   antes tinha duas linhas e a pergunta pede um parágrafo. */
+.sab-campo {
+  width: 100%;
+  min-height: 124px;
+  padding: 13px 15px;
+  border: 1px solid var(--borda-forte);
+  border-radius: var(--raio-m);
+  background: var(--bg-2);
+  color: var(--text-0);
+  /* >=16px: abaixo disso o Safari do iPhone dá zoom na página ao tocar. */
+  font: max(16px, 1rem)/1.6 var(--font-body);
+  resize: vertical;
+}
+.sab-campo:focus-visible {
+  outline: 2px solid var(--predio-primaria, var(--accent));
+  outline-offset: 1px;
+  border-color: transparent;
+}
+.sab-acoes { display: flex; align-items: center; gap: 12px; margin-top: 15px; flex-wrap: wrap; }
+.sab-dica { margin-left: auto; font-size: 0.8rem; color: var(--text-2); opacity: 0.8; }
+.sab-fim h2 { font-family: var(--font-display); font-size: 1.5rem; margin: 0 0 8px; }
+.sab-fim p { margin: 0; line-height: 1.6; max-width: 56ch; }
+
+/* ---- a sabatina como CONVERSA (16/08/2026, pedido do dono) ----
+   O fio rola, o composer fica embaixo — a mesma gramática da aba Conversar,
+   para o primeiro contato já ensinar o gesto que vale no produto inteiro. */
+.sab-conversa {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 440px;
+  max-height: min(66vh, 640px);
+}
+.sab-fio {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 4px 6px 4px 2px;
+}
+.sab-balao {
+  max-width: 82%;
+  padding: 11px 15px;
+  border-radius: 16px;
+  line-height: 1.55;
+}
+.sab-balao p { margin: 0; }
+.sab-balao p + p { margin-top: 6px; }
+.sab-balao-ia {
+  align-self: flex-start;
+  background: var(--bg-1);
+  border: 1px solid var(--borda);
+  border-bottom-left-radius: 6px;
+}
+/* A pergunta do escritório é a frase mais importante do primeiro dia — a
+   serifa continua nela, agora dentro do balão. */
+.sab-balao-ia p:first-child {
+  font-family: var(--font-display);
+  font-size: 1.12rem;
+  line-height: 1.45;
+}
+.sab-balao-dono {
+  align-self: flex-end;
+  background: var(--predio-primaria, var(--accent));
+  color: var(--predio-ink, var(--accent-ink));
+  border-bottom-right-radius: 6px;
+  white-space: pre-wrap;
+}
+.sab-balao-ajuda { font-size: 0.88rem; color: var(--text-2); }
+
+/* "escrevendo…" — três pontos respirando, o mesmo instante em toda fala. */
+.sab-digitando {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  padding: 14px 16px;
+}
+.sab-digitando span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--text-2);
+  animation: sab-ponto 1.1s ease-in-out infinite;
+}
+.sab-digitando span:nth-child(2) { animation-delay: 0.18s; }
+.sab-digitando span:nth-child(3) { animation-delay: 0.36s; }
+@keyframes sab-ponto {
+  0%, 60%, 100% { opacity: 0.35; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-3px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sab-digitando span { animation: none; opacity: 0.6; }
+}
+
+.sab-composer { flex: 0 0 auto; }
+/* No chat o campo é menor que o do formulário antigo: a promessa agora é a
+   de uma MENSAGEM (dá para crescer puxando — resize continua vertical). */
+.sab-campo-chat { min-height: 68px; }
+.sab-fim-acao { align-self: flex-start; margin-top: 4px; }
+
+/* ---- a ficha: o Cânon nascendo linha a linha ---- */
+.sab-ficha { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
+.sab-ficha li { display: flex; gap: 10px; }
+.sab-ficha-marca { flex: 0 0 17px; margin-top: 3px; color: var(--text-2); }
+.sab-ficha li.ok .sab-ficha-marca { color: var(--ok); }
+.sab-ficha li.agora .sab-ficha-marca { color: var(--predio-primaria, var(--accent)); }
+.sab-ficha li.pendente { opacity: 0.5; }
+.sab-ficha-ponto {
+  width: 13px;
+  height: 13px;
+  margin: 5px 2px 0;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+}
+.sab-ficha-txt { min-width: 0; }
+.sab-ficha-rot { display: block; font-size: 0.79rem; color: var(--text-2); }
+.sab-ficha li.agora .sab-ficha-rot { color: var(--predio-primaria, var(--accent)); }
+/* A resposta é um BOTÃO: clicar volta para aquela pergunta com o texto no
+   campo. Corrigir tem que ser editar, não redigitar. */
+.sab-ficha-val {
+  display: block;
+  font: inherit;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  text-align: left;
+  background: none;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  cursor: pointer;
+}
+.sab-ficha-val:hover { text-decoration: underline; }
+.sab-ficha-val.vazio { color: var(--text-2); font-style: italic; cursor: default; }
+.sab-ficha-val.vazio:hover { text-decoration: none; }
+
+/* ---- o balcão de arquivos ---- */
+.sab-envio { display: flex; flex-direction: column; }
+.sab-zona {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  text-align: center;
+  padding: 18px 16px;
+  border: 1.5px dashed var(--borda-forte);
+  border-radius: var(--raio-m);
+  background: var(--bg-2);
+  color: var(--text-2);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.sab-zona:hover,
+.sab-zona.sobre { border-color: var(--predio-primaria, var(--accent)); background: var(--hover); }
+.sab-zona:focus-within { outline: 2px solid var(--predio-primaria, var(--accent)); outline-offset: 3px; }
+.sab-zona[aria-busy='true'] { cursor: progress; opacity: 0.7; }
+.sab-zona strong { font-size: 0.95rem; color: var(--text-0); }
+.sab-zona span { font-size: 0.83rem; line-height: 1.5; }
+
+.sab-fila { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.sab-item {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px 12px;
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-m);
+  background: var(--bg-2);
+}
+.sab-item-icone { flex: none; margin-top: 2px; color: var(--text-2); }
+.sab-item.sab-catalogado .sab-item-icone { color: var(--ok); }
+.sab-item.sab-erro { border-color: color-mix(in srgb, var(--erro) 40%, var(--borda)); }
+.sab-item.sab-erro .sab-item-icone { color: var(--erro); }
+.sab-item-dados { min-width: 0; flex: 1; }
+.sab-item-legenda { margin: 0; font-size: 0.89rem; line-height: 1.45; }
+/* O nome do arquivo fica em SEGUNDO plano: quem lê a lista quer saber o que a
+   coisa é, não como o celular a chamou (o caso real é "IMG_0907.PNG"). */
+.sab-item-nome {
+  display: block;
+  margin-top: 3px;
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  color: var(--text-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sab-item-tags { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 5px; }
+.sab-tag {
+  font-size: 0.71rem;
+  color: var(--text-2);
+  background: var(--bg-1);
+  border: 1px solid var(--borda);
+  border-radius: 999px;
+  padding: 1px 8px;
+}
+
+/* ---- rodapé: a outra porta, em tom baixo ---- */
+.sab-rodape {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  padding: 12px 22px;
+  border-top: 1px solid var(--borda);
+}
+.sab-porta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: inherit;
+  font-size: 0.88rem;
+  color: var(--link);
+  background: none;
+  border: 0;
+  padding: 6px 0;
+  cursor: pointer;
+}
+.sab-porta:hover { text-decoration: underline; }
+
+@media (max-width: 900px) {
+  .sab-grid { grid-template-columns: 1fr; }
+  .sab-dir { border-left: 0; border-top: 1px solid var(--borda); }
+  .sab-esq { padding: 26px 20px 22px; }
+  .sab-pergunta { font-size: 1.4rem; }
+}
+
+/* ==================== GUIA DO ESCRITÓRIO ====================
+   A última porta do menu: o laço de trabalho e os 7 C's com a mobília. */
+.guia { display: flex; flex-direction: column; gap: 22px; }
+.guia-intro {
+  margin: 0;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid var(--borda);
+  background: var(--papel);
+  line-height: 1.55;
+}
+.guia-bloco { display: flex; flex-direction: column; gap: 12px; }
+.guia-bloco h3 { margin: 0; font-size: 1.15rem; }
+.guia-explica { margin: 0; }
+.guia-laco {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 12px;
+}
+.guia-passo {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid var(--borda);
+  background: var(--papel);
+}
+.guia-passo-numero {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-2);
+  opacity: 0.7;
+}
+.guia-passo-icone { font-size: 1.5rem; }
+.guia-passo-texto strong { display: block; margin-bottom: 2px; }
+.guia-passo-texto p { margin: 0; font-size: 0.92rem; line-height: 1.45; }
+.guia-cs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+}
+.guia-c {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid var(--borda);
+  background: var(--papel);
+}
+.guia-c-topo {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+.guia-c-nome { font-size: 1.05rem; }
+.guia-c-chip {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.78rem;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--borda);
+  background: var(--bg-2);
+  color: var(--text-2);
+  white-space: nowrap;
+}
+.guia-c-offiz { margin: 0; line-height: 1.5; }
+.guia-c-mobilia { margin: 0; font-size: 0.9rem; }
+.guia-c-atalho { align-self: flex-start; }
+
+/* ============================================================
+   🎬 ESTÚDIO v2 — a casa da produção por peça (10/08/2026).
+   O desenho segue o mockup aprovado: conversa própria à direita,
+   trilho de atos na ordem do filme, roteiro em texto embaixo.
+   ============================================================ */
+.estudio-topo { display: flex; align-items: flex-start; gap: 16px;
+  justify-content: space-between; flex-wrap: wrap; margin-bottom: 14px; }
+.estudio-emvoo { font-size: 12px; color: var(--accent);
+  border: 1px solid var(--accent); border-radius: 999px; padding: 4px 12px; }
+.estudio-corpo { display: grid; grid-template-columns: 1fr 340px; gap: 16px;
+  align-items: start; }
+@media (max-width: 1100px) { .estudio-corpo { grid-template-columns: 1fr; } }
+.estudio-corpo--embutido { grid-template-columns: minmax(0, 1fr); }
+.estudio-plano { margin-bottom: 16px; overflow-wrap: anywhere; }
+.estudio-plano > header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.estudio-plano h3 { margin: 0; font-size: 16px; }
+.estudio-plano p, .estudio-plano li { font-size: 13px; line-height: 1.5; }
+.estudio-plano details { border-block: 1px solid var(--borda); padding-block: 10px; margin-block: 12px; }
+.estudio-plano summary { cursor: pointer; font-size: 13px; font-weight: 600; }
+.estudio-plano ol, .estudio-plano ul { padding-left: 22px; }
+.estudio-plano li + li { margin-top: 10px; }
+.estudio-plano-pendencias { margin-block: 12px; }
+.estudio-plano-acoes { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+
+/* o trilho: atos como caixinhas ligadas, na ordem do filme */
+.estudio-trilho { display: flex; gap: 40px; overflow-x: auto;
+  padding: 10px 2px 14px; }
+.estudio-ato { position: relative; flex: 0 0 190px; text-align: left;
+  background: var(--papel); border: 1px solid var(--borda); border-radius: 12px;
+  padding: 10px 12px; cursor: pointer; display: flex; flex-direction: column;
+  gap: 7px; transition: transform 150ms ease; }
+.estudio-ato:hover { transform: translateY(-1px); border-color: var(--borda-forte); }
+.estudio-ato.aberta { border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent); }
+.estudio-ato::after { content: '›'; position: absolute; left: 100%; top: 50%;
+  transform: translate(12px, -50%); color: var(--borda-forte); font-size: 18px; }
+.estudio-ato:last-child::after { display: none; }
+.estudio-ato-topo { display: flex; align-items: center; gap: 7px; font-size: 13px; }
+.estudio-ato-topo code { margin-left: auto; font-size: 11px; color: var(--text-2); opacity: .7; }
+.estudio-fita { display: flex; gap: 2px; height: 6px; }
+.estudio-fita i { flex: 1; border-radius: 1px; background: var(--ok, #54806a); }
+.estudio-fita i.vazio { background: transparent;
+  box-shadow: inset 0 0 0 1px var(--borda-forte); }
+
+/* a gaveta: as cenas do ato aberto */
+.estudio-gaveta { display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px;
+  padding: 12px; border: 1px solid var(--borda); border-radius: 12px;
+  background: color-mix(in srgb, var(--papel) 60%, transparent);
+  margin-bottom: 14px; }
+.estudio-cena { border: 1px solid var(--borda); border-radius: 10px;
+  padding: 9px 11px; background: var(--papel); }
+.estudio-cena-topo { display: flex; align-items: baseline; gap: 7px;
+  font-size: 13px; flex-wrap: wrap; }
+.estudio-cena p { margin: 4px 0; font-size: 12.5px; }
+
+/* 🧬 como foi feita — o quadro tipo Miro da genealogia (fontes → cenas →
+   filme). As arestas são um SVG absoluto medido no DOM; o quadro rola no X
+   e as linhas rolam JUNTO porque o SVG mora dentro do conteúdo rolável. */
+.cff { border-top: 1px solid var(--borda); padding-top: 12px; margin-bottom: 14px; }
+.cff-cabeca h3 { font-size: 14px; margin: 0; }
+.cff-cabeca p { margin: 3px 0 10px; font-size: 12.5px; }
+.cff-trava-aviso { font-size: 12.5px; }
+.cff-nota { font-size: 12px; margin: 0 0 8px; }
+.cff-quadro { position: relative; display: grid;
+  grid-template-columns: minmax(210px, 1fr) minmax(250px, 1.3fr) minmax(210px, 1fr);
+  gap: 12px 56px; overflow-x: auto; padding: 6px 2px 10px; }
+.cff-arestas { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
+.cff-arestas path { fill: none; stroke: var(--borda-forte); stroke-width: 1.5;
+  opacity: .9; }
+.cff-arestas path.falta { stroke: var(--coral); stroke-dasharray: 5 4; }
+.cff-col { position: relative; z-index: 1; display: flex; flex-direction: column;
+  gap: 8px; min-width: 0; }
+.cff-col > h4 { margin: 0 0 2px; font-size: 11.5px; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--text-2); opacity: .75; }
+.cff-no { display: flex; gap: 9px; align-items: flex-start;
+  background: var(--papel); border: 1px solid var(--borda); border-radius: 10px;
+  padding: 8px 10px; }
+.cff-no.cff-falta { border-color: color-mix(in srgb, var(--coral) 60%, transparent);
+  background: color-mix(in srgb, var(--coral) 7%, var(--papel)); }
+.cff-no.cff-pendente { border-style: dashed; }
+.cff-no.cff-final { border-color: color-mix(in srgb, var(--accent) 45%, var(--borda)); }
+.cff-thumb { width: 56px; height: 42px; object-fit: cover; border-radius: 6px;
+  flex: 0 0 auto; background: #000; }
+.cff-icone { width: 40px; height: 40px; display: grid; place-items: center;
+  font-size: 19px; flex: 0 0 auto; }
+.cff-no-texto { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.cff-no-texto strong { font-size: 12.5px; line-height: 1.3; overflow-wrap: anywhere; }
+.cff-no-texto small { font-size: 11px; color: var(--text-2);
+  opacity: .85; overflow-wrap: anywhere; }
+.cff-falta-txt { color: var(--coral); opacity: 1 !important; }
+.cff-no-acoes { flex: 0 0 auto; display: flex; flex-direction: column; gap: 4px; }
+.cff-no-acoes .botao-texto { font-size: 11.5px; }
+.cff-prompt summary { font-size: 11px; cursor: pointer;
+  color: var(--text-2); opacity: .85; }
+.cff-prompt p { margin: 4px 0 0; font-size: 11.5px; line-height: 1.45;
+  font-family: var(--font-mono, monospace);
+  background: color-mix(in srgb, var(--papel) 55%, transparent);
+  border: 1px solid var(--borda); border-radius: 8px; padding: 6px 8px;
+  white-space: pre-wrap; word-break: break-word; }
+.cff-video { width: 100%; border-radius: 10px; border: 1px solid var(--borda);
+  margin-top: 4px; background: #000; }
+/* O VISOR do quadro (16/08/2026): ver o clipe da cena, ouvir só a narração,
+   abrir o material que virou base — sem sair de "como foi feita". Fundo
+   escurecido porque o quadro atrás é denso: sem ele, o vídeo pequeno se perde
+   no meio das arestas. */
+.cff-visor {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100dvh;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  border: 0;
+  color: inherit;
+  z-index: 70;
+  background: rgba(0, 0, 0, 0.55);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  /* Entrada do overlay (redesign ago/2026): véu em fade, caixa com um scale
+     quase imperceptível — papel não pula. */
+  animation: visor-veu-entra 200ms ease both;
+}
+.cff-visor[open] { display: flex; }
+@keyframes visor-veu-entra { from { opacity: 0; } }
+.cff-visor-caixa {
+  background: var(--papel);
+  border: 1px solid var(--borda);
+  border-radius: 14px;
+  animation: visor-caixa-entra 200ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  padding: 12px 14px;
+  max-width: min(900px, 92vw);
+  max-height: 88vh;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+@keyframes visor-caixa-entra { from { opacity: 0; transform: scale(0.98); } }
+.cff-visor-caixa header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  justify-content: space-between;
+}
+.cff-visor-caixa header button { min-height: 44px; flex-shrink: 0; }
+.cff-visor-caixa header strong { min-width: 0; overflow-wrap: anywhere; }
+.cff-visor-caixa > small { word-break: break-all; font-size: 11px; }
+.cff-visor-img { max-width: 100%; max-height: 70vh; object-fit: contain; border-radius: 8px; }
+.cff-audio-player { width: min(520px, 100%); }
+
+.cff-troca { margin-top: 10px; border: 1px solid var(--accent); border-radius: 12px;
+  background: var(--papel); padding: 10px 12px; }
+.cff-troca header { display: flex; align-items: baseline; gap: 10px;
+  justify-content: space-between; font-size: 13px; }
+.cff-troca p { margin: 4px 0 8px; font-size: 12px; }
+.cff-troca ul { list-style: none; margin: 0; padding: 0; display: flex;
+  flex-direction: column; gap: 4px; max-height: 240px; overflow-y: auto; }
+.cff-troca li button { width: 100%; text-align: left; font-size: 12.5px;
+  background: transparent; color: inherit; border: 1px solid var(--borda);
+  border-radius: 8px; padding: 6px 9px; cursor: pointer; }
+.cff-troca li button:hover { border-color: var(--accent); }
+.cff-troca-pasta { display: inline-block; font-size: 10.5px; border: 1px solid
+  var(--borda); border-radius: 999px; padding: 1px 7px; margin-right: 7px;
+  opacity: .8; }
+@media (max-width: 900px) {
+  .cff-quadro { grid-template-columns: 1fr; gap: 10px; }
+  .cff-arestas { display: none; } /* em coluna única a aresta viraria macarrão */
+}
+
+/* como a IA pensou — o roteiro em texto */
+.estudio-roteiro { border-top: 1px solid var(--borda); padding-top: 12px; }
+.estudio-roteiro h3 { font-size: 14px; margin: 0 0 8px; }
+.estudio-roteiro ol { margin: 0 0 8px; padding-left: 20px; }
+.estudio-roteiro li { font-size: 13px; margin: 4px 0; line-height: 1.5; }
+.estudio-roteiro code { margin-right: 6px; }
+
+/* a conversa do estúdio */
+.estudio-chat { position: sticky; top: 12px; display: flex;
+  flex-direction: column; border: 1px solid var(--borda); border-radius: 14px;
+  background: var(--papel); max-height: calc(100dvh - 180px); min-height: 380px; }
+.estudio-chat > header { padding: 12px 14px 8px; border-bottom: 1px solid var(--borda); }
+.estudio-chat > header p { margin: 4px 0 0; font-size: 12px; }
+.estudio-msgs { flex: 1; overflow-y: auto; padding: 12px 14px;
+  display: flex; flex-direction: column; gap: 8px; }
+.estudio-bolha { max-width: 92%; border-radius: 12px; padding: 8px 11px;
+  font-size: 13px; line-height: 1.45; }
+.estudio-bolha p { margin: 0; white-space: pre-wrap; word-break: break-word; }
+.estudio-bolha.minha { align-self: flex-end;
+  background: color-mix(in srgb, var(--accent) 16%, var(--papel));
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent); }
+.estudio-bolha.ia { align-self: flex-start; background: var(--papel-chip, var(--papel));
+  border: 1px solid var(--borda); }
+.estudio-sugestao { display: flex; align-items: center; gap: 10px;
+  flex-wrap: wrap; margin-top: 8px; padding-top: 8px;
+  border-top: 1px dashed var(--borda); font-size: 12.5px; }
+.estudio-composer { display: flex; gap: 8px; padding: 10px 12px;
+  border-top: 1px solid var(--borda); align-items: flex-end; }
+.estudio-composer textarea { flex: 1; resize: none; font: inherit;
+  font-size: 13px; background: transparent; color: inherit; border: 1px solid
+  var(--borda); border-radius: 10px; padding: 8px 10px; }
+.estudio-composer .botao { flex: 0 0 auto; }
+
+/* anexos do estúdio: 📎 no composer, chips do que subiu, aro ao arrastar */
+.estudio-anexo-btn { flex: 0 0 auto; border: 1px solid var(--borda);
+  background: transparent; border-radius: 10px; padding: 8px 10px;
+  font-size: 15px; cursor: pointer; line-height: 1; }
+.estudio-anexo-btn:hover { border-color: var(--borda-forte); }
+.estudio-anexo-btn:disabled { opacity: 0.5; cursor: default; }
+.estudio-anexos { display: flex; flex-wrap: wrap; gap: 6px;
+  padding: 8px 12px 0; }
+.estudio-anexo-chip { font-size: 11.5px; border: 1px solid var(--borda);
+  border-radius: 999px; padding: 3px 10px; max-width: 100%;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.estudio-anexo-chip.ok { border-color: color-mix(in srgb, var(--ok, #54806a) 55%, transparent); }
+.estudio-anexo-chip.erro { border-color: color-mix(in srgb, var(--coral) 60%, transparent);
+  color: var(--coral); }
+.estudio-chat.arrastando { border-color: var(--accent); border-style: dashed;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent); }
+
+/* tela cheia ("tipo um F11"): overlay fixo cobrindo a janela do app —
+   z-index 60, abaixo dos toasts (120), que continuam visíveis. */
+.estudio--imersivo { position: fixed; inset: 0; z-index: 60;
+  overflow-y: auto; background: var(--bg-0);
+  padding: 16px clamp(14px, 2.5vw, 36px) 28px; }
+.estudio--imersivo .estudio-corpo {
+  grid-template-columns: minmax(0, 1fr) minmax(340px, 30vw); }
+.estudio--imersivo .estudio-chat { max-height: calc(100dvh - 110px); }
+/* Em tela estreita a regra imersiva acima venceria a media query de 1100px
+   por especificidade e cravaria 2 colunas (chat de 340px esmagando o fluxo
+   a ~0) — a tela cheia também empilha em coluna única. */
+@media (max-width: 1100px) {
+  .estudio--imersivo .estudio-corpo { grid-template-columns: 1fr; }
+}
+
+/* O molde aberto no Estúdio (16/08/2026): descrição em cima, contrato JSON
+   embaixo — com scroll próprio, porque contrato de molde é comprido e o modal
+   não pode crescer até tampar a tela. */
+.estudio-molde { display: flex; flex-direction: column; gap: 8px; max-width: 560px; }
+.estudio-molde p { margin: 0; line-height: 1.55; }
+.estudio-molde-json {
+  margin: 6px 0 0;
+  padding: 10px 12px;
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+  background: var(--bg-2);
+  font-size: 11.5px;
+  line-height: 1.5;
+  max-height: 320px;
+  overflow: auto;
+}
+
+/* ═══ EDITOR DA PEÇA (edpc) — 24/08/2026, os mockups do dono ═══ */
+.edpc { display: flex; flex-direction: column; gap: 12px; }
+.edpc-topo { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.edpc-espaco { flex: 1; }
+.edpc-corpo { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 14px; align-items: start; }
+.edpc-visor { min-width: 0; }
+.edpc-preview { background: var(--papel); border: 1px solid var(--borda); border-radius: var(--raio-m, 10px); overflow: hidden; }
+.edpc-preview img { display: block; width: 100%; max-height: 340px; object-fit: contain; background: #000; }
+.edpc-preview-vazio { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 48px 0; color: var(--text-2); }
+.edpc-preview-nota { margin: 6px 10px 10px; font-size: 12px; }
+.edpc-takes { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.edpc-take { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 12px; }
+.edpc-take.ativo { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.edpc-take small { font-size: 11px; opacity: .75; }
+.edpc-inspetor { display: flex; flex-direction: column; gap: 8px; background: var(--papel); border: 1px solid var(--borda); border-radius: var(--raio-m, 10px); padding: 12px; }
+.edpc-linha { display: flex; align-items: center; gap: 8px; }
+.edpc-linha input { width: 90px; font-family: var(--font-mono, monospace); }
+.edpc-rotulo { font-size: 12px; font-weight: 700; letter-spacing: .04em; margin-top: 4px; }
+.edpc-inspetor textarea { width: 100%; resize: vertical; font: inherit; background: transparent; color: inherit; border: 1px solid var(--borda); border-radius: 8px; padding: 8px; }
+.edpc-aviso { font-size: 12px; color: var(--coral, #e0704f); margin: 2px 0 0; }
+.edpc-sigs { display: flex; flex-direction: column; gap: 2px; font-size: 11px; margin-top: 6px; }
+.edpc-sigs code { font-size: 10px; }
+.edpc-acoes { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.edpc-timeline { border-top: 1px solid var(--borda); padding-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+.edpc-lane { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 8px; align-items: stretch; }
+.edpc-lane-nome { font-size: 10px; letter-spacing: .08em; color: var(--text-2); align-self: center; }
+.edpc-fita { display: flex; gap: 3px; min-height: 52px; }
+.edpc-bloco { position: relative; flex-basis: 0; min-width: 34px; border: 1px solid var(--borda); border-radius: 6px; background: var(--papel); padding: 0; overflow: hidden; cursor: pointer; }
+.edpc-bloco img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.edpc-bloco.ativo { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.edpc-bloco.pendente { border-style: dashed; }
+.edpc-bloco-rotulo { font-size: 11px; font-family: var(--font-mono, monospace); }
+.edpc-cadeado { position: absolute; right: 3px; bottom: 2px; font-size: 10px; }
+.edpc-fita-arte { min-height: 24px; }
+.edpc-chip { flex-basis: 0; min-width: 34px; border: 1px dashed var(--borda); border-radius: 6px; font-size: 10px; display: flex; align-items: center; justify-content: center; padding: 2px 4px; overflow: hidden; white-space: nowrap; }
+.edpc-ondas { display: flex; align-items: flex-end; gap: 1px; height: 44px; border: 1px solid var(--borda); border-radius: 6px; padding: 3px 4px; overflow: hidden; }
+.edpc-ondas i { flex: 1 0 1px; min-width: 1px; background: var(--accent); opacity: .8; border-radius: 1px; }
+.edpc-legenda-nota { font-size: 11px; margin: 2px 0 0; }
+@media (max-width: 900px) {
+  .edpc-corpo { grid-template-columns: 1fr; }
+}
+
+/* História do pensamento dentro do quadro (24/08/2026) */
+.fluxo-pensamento { border: 1px solid var(--borda); border-radius: var(--raio-m, 10px); padding: 10px 12px; margin: 10px 0 4px; max-height: 420px; overflow-y: auto; background: var(--papel); }
+.edpc-preview video { display: block; width: 100%; max-height: 380px; background: #000; }
+.edpc-fontes { display: flex; gap: 6px; flex-wrap: wrap; padding: 8px 10px 2px; }
+.edpc-fonte-chip { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; border: 1px solid var(--borda); border-radius: 999px; padding: 2px 10px; background: transparent; color: inherit; cursor: pointer; }
+.edpc-fonte-chip:hover { border-color: var(--accent); }
+
+/* Os C's DO DONO no guia (24/08/2026): Custo e Confiança com moldura própria. */
+.guia-c--dono { border-color: var(--accent); box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent); }
+
+
+/* ================================================================== */
+/* A MESA (26/08/2026) — histórico | conversa | peça.                 */
+/* Desktop: três colunas. Celular: uma por vez — o histórico vira     */
+/* gaveta e a peça vira folha por cima da conversa.                   */
+/* ================================================================== */
+
+.mesa {
+  position: relative;
+  display: grid;
+  grid-template-columns: 248px minmax(0, 1fr);
+  gap: 0;
+  height: calc(100dvh - 8.5rem);
+  min-height: 420px;
+  background: var(--bg-2);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-g);
+  overflow: hidden;
+}
+.mesa--peca-aberta {
+  /* O CHAT é o protagonista: nunca estreita além de 400px — o painel
+     cede (e o divisor deixa alargar na mão quando a peça pedir). */
+  grid-template-columns: 248px minmax(400px, 1fr) minmax(320px, var(--mesa-peca-w, 36%));
+}
+/* o botão ≡ recolhe a coluna de conversas — só no computador (no celular
+   a nav já é gaveta) */
+@media (min-width: 901px) {
+  .mesa--nav-recolhida { grid-template-columns: 0 minmax(0, 1fr); }
+  .mesa--nav-recolhida.mesa--peca-aberta {
+    grid-template-columns: 0 minmax(400px, 1fr) minmax(320px, var(--mesa-peca-w, 36%));
+  }
+  .mesa--nav-recolhida .mesa-nav { display: none; }
+}
+
+/* ---------- histórico ---------- */
+.mesa-nav {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--bg-1);
+  border-right: 1px solid var(--borda);
+}
+.mesa-nav__topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 14px 8px;
+  font-size: 0.9rem;
+}
+.mesa-nav__lista {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 8px 8px;
+}
+.mesa-nav__item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: var(--raio-s);
+  background: none;
+  cursor: pointer;
+  color: var(--text-0);
+}
+.mesa-nav__item:hover { background: var(--bg-3); }
+.mesa-nav__item[aria-current='true'] {
+  background: var(--bg-2);
+  box-shadow: var(--sombra-1);
+}
+.mesa-nav__titulo {
+  display: block;
+  font-size: 0.86rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mesa-nav__meta { display: block; font-size: 0.74rem; color: var(--text-2); }
+.mesa-nav__vazio { padding: 10px; font-size: 0.8rem; color: var(--text-2); }
+.mesa-nav__acervo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px;
+  padding: 8px 10px;
+  border: 0;
+  border-top: 1px solid var(--borda);
+  background: none;
+  color: var(--text-1);
+  font-size: 0.84rem;
+  cursor: pointer;
+  border-radius: var(--raio-s);
+}
+.mesa-nav__acervo:hover { background: var(--bg-3); color: var(--text-0); }
+
+/* ---------- conversa ---------- */
+.mesa-chat { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+.mesa-chat__topo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--borda);
+}
+.mesa-chat__topo h2 { margin: 0; font-size: 1rem; }
+.mesa-pecas-chips {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  margin-left: auto;
+  scrollbar-width: none;
+}
+.mesa-pecas-chips::-webkit-scrollbar { display: none; }
+.mesa-chip {
+  border: 1px solid var(--borda-forte);
+  background: var(--bg-2);
+  color: var(--text-1);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.mesa-chip:hover { color: var(--text-0); }
+.mesa-chip[aria-current='true'] {
+  background: var(--text-0);
+  color: var(--bg-2);
+  border-color: var(--text-0);
+}
+
+.mesa-fio {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  /* Ultrawide: a conversa vive numa COLUNA CENTRAL (~880px) — o padding
+     lateral cresce com a tela e o align-self das bolhas encosta nas
+     bordas da coluna, não do monitor. */
+  padding: 20px max(20px, calc((100% - 880px) / 2));
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.mesa-vazio { margin: auto; max-width: 44ch; text-align: center; color: var(--text-2); }
+/* A produção ocupa uma mensagem no fio, inclusive com Entregas aberta.
+   Porcentagem discreta; eventos só aparecem a pedido da pessoa. */
+.mesa-fio > .doca-placa-grupo { flex: none; width: 100%; max-width: 72ch; }
+.atividade-chat { gap: 8px; min-width: 0; padding: 12px 0; }
+.atividade-chat:empty { display: none; }
+.atividade-chat .doca-placa { padding: 0; border-radius: 0; gap: 6px; }
+.atividade-chat .doca-placa-topo { gap: 4px 8px; }
+.atividade-chat .doca-balao-led { width: 6px; height: 6px; animation: none; }
+.atividade-chat .doca-placa-titulo { flex-basis: calc(100% - 20px); font-size: 14px; line-height: 1.45; }
+.atividade-chat-estado { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 12px; color: var(--text-2); }
+.atividade-chat-tempo { font-variant-numeric: tabular-nums; }
+.atividade-chat .doca-placa-pct { margin: 0; font: inherit; color: var(--text-2); font-variant-numeric: tabular-nums; }
+.atividade-chat .doca-placa-tempo { flex: 1 1 auto; font: 400 12px/1.5 var(--font-body); }
+.atividade-chat .botao-texto { min-height: 36px; padding: 4px 6px; color: var(--text-2); }
+.atividade-chat .botao-texto:hover { color: var(--text-0); }
+.atividade-chat .botao-texto:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.atividade-chat .doca-placa-barra { position: absolute; width: 1px; height: 1px; clip-path: inset(50%); overflow: hidden; }
+.atividade-chat .doca-placa-log { font: 400 13px/1.5 var(--font-body); color: var(--text-2); -webkit-line-clamp: 1; }
+.atividade-chat .doca-placa-passos { border-radius: 0; border-left: 2px solid var(--borda); padding: 0 0 0 12px; }
+.atividade-chat .stream { min-height: 0; max-height: 260px; padding: 4px 8px 4px 0; border: 0; border-radius: 0; background: transparent; }
+.atividade-chat .stream-texto { padding: 0; border: 0; background: transparent; font-size: 14px; }
+.atividade-chat .stream-tool, .atividade-chat .stream-tools summary { font-family: var(--font-body); }
+.mesa-fio .doca-placa-falha { margin: 12px 0; padding: 8px 12px; border: 0; border-left: 2px solid var(--coral-forte); border-radius: 0; box-shadow: none; background: transparent; }
+.mesa-fio .doca-placa-falha .doca-placa-tempo { font: 400 12px/1.5 var(--font-body); }
+.mesa-fio .doca-placa-falha .botao-texto { min-height: 36px; padding: 4px 6px; }
+.mesa-fio .doca-placa-falha .doca-placa-log { display: block; overflow: visible; font: 400 13px/1.5 var(--font-body); }
+@media (max-width: 600px) {
+  .atividade-chat .botao-texto { min-height: 44px; }
+}
+.mesa-msg { max-width: 62ch; }
+.mesa-msg p { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.mesa-msg--dono {
+  align-self: flex-end;
+  background: var(--bg-1);
+  border-radius: 14px 14px 4px 14px;
+  padding: 8px 14px;
+}
+.mesa-msg--ia { align-self: flex-start; font-size: 1.02rem; }
+.mesa-pensando { color: var(--text-2); }
+.mesa-cartao {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-m);
+  background: var(--bg-1);
+  font-size: 0.88rem;
+}
+
+/* Cartão-mini da PEÇA na conversa (chat rico, 27/08): clique puxa o painel
+   da peça pro lado. É um <button> — herda fonte e alinha à esquerda. */
+.mesa-cartao--peca {
+  width: 100%;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: var(--text-0);
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.mesa-cartao--peca:hover {
+  border-color: var(--accent);
+  background: var(--accent-suave);
+}
+.mesa-cartao__peca-texto {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+.mesa-cartao__peca-texto strong {
+  font-size: 0.92rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mesa-cartao__peca-texto span { font-size: 0.78rem; color: var(--text-2); }
+.mesa-cartao__peca-abrir {
+  flex-shrink: 0;
+  font-size: 0.82rem;
+  color: var(--accent);
+  font-weight: 600;
+}
+/* Chips de resposta pronta grudados na última mensagem da IA. */
+.mesa-msg__chips { margin-top: 10px; }
+
+.mesa-escrever { padding: 10px 16px 14px; border-top: 1px solid var(--borda); }
+.mesa-escrever form,
+.mesa-escrever .mesa-anexos,
+.mesa-escrever .mesa-partida {
+  max-width: 880px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.mesa-anexos { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.mesa-anexo {
+  font-size: 0.76rem;
+  border-radius: 999px;
+  padding: 3px 10px;
+  background: var(--accent-suave);
+  color: var(--accent-forte);
+}
+.mesa-anexo--erro { background: var(--coral-suave); color: var(--erro); }
+.mesa-escrever form {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  background: var(--bg-1);
+  border-radius: 22px;
+  padding: 4px 6px 4px 8px;
+}
+.mesa-escrever form textarea {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: none;
+  color: var(--text-0);
+  font: inherit;
+  line-height: 1.45;
+  padding: 8px 4px;
+  resize: none;
+  max-height: 200px;
+  overflow-y: auto;
+}
+.mesa-escrever form textarea:focus { outline: none; }
+.mesa-escrever form .mesa-icone { margin-bottom: 4px; }
+.mesa-escrever form .mesa-enviar { margin-bottom: 2px; }
+.mesa-escrever form input:not([type='file']) {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: none;
+  color: var(--text-0);
+  font: inherit;
+  padding: 8px 4px;
+}
+.mesa-escrever form input:focus { outline: none; }
+.mesa-enviar {
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--predio-primaria);
+  color: var(--predio-ink, var(--accent-ink));
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+.mesa-enviar:disabled { opacity: 0.5; cursor: default; }
+
+.mesa-icone {
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: var(--raio-s);
+  background: none;
+  color: var(--text-1);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+.mesa-icone:hover { background: var(--bg-3); color: var(--text-0); }
+.mesa-so-celular { display: none; }
+
+/* ---------- a peça ---------- */
+.mesa-peca {
+  min-width: 0;
+  min-height: 0;
+  border-left: 1px solid var(--borda);
+  background: var(--bg-2);
+  display: none;
+}
+.mesa-peca--aberta { display: block; position: relative; }
+.mesa-peca__rolagem {
+  height: 100%;
+  overflow-y: auto;
+  padding: 18px 20px 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.mesa-peca__topo {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  position: sticky;
+  top: -18px;
+  z-index: 4;
+  background: var(--bg-2);
+  padding: 18px 0 10px;
+  margin-top: -18px;
+}
+.mesa-peca__topo h3 { margin: 0; font-size: 1.05rem; }
+.mesa-peca__topo > div { flex: 1; min-width: 0; }
+.mesa-peca__meta { font-size: 0.78rem; color: var(--text-2); }
+
+.mesa-gerando {
+  border-radius: var(--raio-m);
+  background: var(--accent-suave);
+  color: var(--accent-forte);
+  padding: 12px 14px;
+  font-size: 0.86rem;
+}
+.mesa-gerando p { margin: 6px 0 0; }
+.mesa-gerando__barra {
+  display: block;
+  height: 3px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--accent) 40%, transparent 40%);
+  background-size: 200% 100%;
+  animation: mesa-varre 1.2s linear infinite;
+}
+@keyframes mesa-varre { from { background-position: 200% 0; } to { background-position: -100% 0; } }
+@media (prefers-reduced-motion: reduce) { .mesa-gerando__barra { animation: none; } }
+
+.mesa-ref {
+  background: var(--bg-1);
+  border-radius: var(--raio-m);
+  padding: 12px 14px;
+  font-size: 0.85rem;
+}
+.mesa-ref__fonte { display: flex; align-items: center; gap: 8px; font-size: 0.88rem; }
+.mesa-ref dl {
+  margin: 8px 0 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 10px;
+}
+.mesa-ref dt { color: var(--text-2); font-size: 0.76rem; white-space: nowrap; }
+.mesa-ref dd { margin: 0; color: var(--text-1); }
+
+.mesa-origens { display: flex; flex-wrap: wrap; gap: 6px; }
+.mesa-origem {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+.mesa-origem::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.mesa-origem--acervo { background: var(--ok-suave); color: var(--ok); }
+.mesa-origem--mix { background: var(--accent-suave); color: var(--accent-forte); }
+.mesa-origem--gerada { background: var(--bg-1); color: var(--text-1); }
+.mesa-origem--custo { background: var(--coral-suave); color: var(--erro); }
+
+.mesa-cenas {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+}
+.mesa-cena {
+  flex: 0 0 116px;
+  border: 0;
+  background: none;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.mesa-cena[aria-current='true'] .mesa-quadro { outline: 2px solid var(--text-0); outline-offset: 2px; }
+.mesa-quadro {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  border-radius: var(--raio-s);
+  background: linear-gradient(165deg, #3a3a44, #22222a);
+  display: flex;
+  align-items: flex-end;
+  padding: 8px;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  box-sizing: border-box;
+}
+.mesa-quadro--plano { opacity: 0.62; border: 1px dashed var(--borda-forte); text-shadow: 0 1px 3px rgba(0, 0, 0, 0.65); }
+.mesa-quadro--vazio { background: var(--bg-1); }
+.mesa-cena__origem { align-self: flex-start; }
+.mesa-cena__rotulo {
+  font-size: 0.74rem;
+  color: var(--text-1);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.mesa-cena-aberta {
+  display: grid;
+  grid-template-columns: minmax(120px, 150px) 1fr;
+  gap: 14px;
+  background: var(--bg-1);
+  border-radius: var(--raio-m);
+  padding: 14px;
+}
+.mesa-cena-aberta__corpo { display: flex; flex-direction: column; gap: 8px; font-size: 0.88rem; }
+.mesa-cena-aberta__corpo h4 { margin: 0; }
+.mesa-cena-aberta__corpo p { margin: 0; }
+
+.mesa-materiais { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.mesa-rotulo { width: 100%; font-size: 0.74rem; color: var(--text-2); }
+.mesa-material {
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 0.78rem;
+  background: var(--accent-suave);
+  color: var(--accent-forte);
+}
+.mesa-material--falta { background: var(--coral-suave); color: var(--erro); }
+.mesa-troca { display: flex; flex-wrap: wrap; gap: 6px; }
+.mesa-troca__opcao {
+  border: 1px solid var(--borda-forte);
+  background: var(--bg-2);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 0.78rem;
+  cursor: pointer;
+  color: var(--text-1);
+}
+.mesa-troca__opcao:hover { color: var(--text-0); border-color: var(--text-1); }
+
+.mesa-secao { display: flex; align-items: baseline; gap: 10px; justify-content: space-between; }
+.mesa-secao h4 { margin: 0; font-size: 0.92rem; }
+.mesa-falta { display: flex; flex-direction: column; gap: 8px; }
+.mesa-item {
+  border-left: 3px solid var(--aviso);
+  padding: 6px 0 6px 12px;
+  font-size: 0.86rem;
+}
+.mesa-item p { margin: 2px 0 0; color: var(--text-1); }
+.mesa-item--trava { border-left-color: var(--erro); }
+.mesa-item--nota { border-left-color: var(--borda-forte); }
+.mesa-item--ajuste { border-left-color: var(--aviso); }
+.mesa-item--ok { opacity: 0.55; }
+.mesa-item--ok strong { text-decoration: line-through; }
+
+.mesa-vozes { display: flex; flex-wrap: wrap; gap: 6px; }
+.mesa-script {
+  margin: 0;
+  padding-left: 12px;
+  border-left: 2px solid var(--borda);
+  font-size: 0.9rem;
+}
+
+.mesa-portao {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-top: 14px;
+  border-top: 1px solid var(--borda);
+}
+.mesa-btn {
+  border: 1px solid var(--borda-forte);
+  background: var(--bg-2);
+  color: var(--text-0);
+  border-radius: 999px;
+  padding: 8px 18px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.mesa-btn--cheio { background: var(--predio-primaria); border-color: var(--predio-primaria); color: var(--predio-ink, var(--accent-ink)); }
+.mesa-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.mesa-link {
+  border: 0;
+  background: none;
+  color: var(--predio-primaria);
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  align-self: flex-start;
+}
+.mesa-link:hover { opacity: 0.75; }
+.mesa-suave { font-size: 0.8rem; color: var(--text-2); margin: 0; }
+
+.mesa-solte {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  background: rgba(43, 36, 49, 0.45);
+  border-radius: var(--raio-g);
+}
+.mesa-solte > div {
+  background: var(--bg-2);
+  border-radius: var(--raio-m);
+  padding: 18px 26px;
+  font-weight: 600;
+}
+.mesa-solte small { display: block; font-weight: 400; color: var(--text-2); margin-top: 4px; }
+
+.mesa-veu { display: none; }
+
+/* ---------- celular: uma coluna por vez ---------- */
+@media (max-width: 900px) {
+  .mesa,
+  .mesa--peca-aberta { grid-template-columns: minmax(0, 1fr); height: calc(100dvh - 10rem); }
+  .mesa-so-celular { display: grid; }
+  .mesa-nav {
+    position: absolute;
+    inset: 0 22% 0 0;
+    z-index: 20;
+    transform: translateX(-105%);
+    transition: transform var(--transicao);
+    box-shadow: 0 0 40px -12px rgba(0, 0, 0, 0.4);
+  }
+  .mesa--nav-aberta .mesa-nav { transform: none; }
+  .mesa-veu {
+    display: block;
+    position: absolute;
+    inset: 0;
+    z-index: 19;
+    background: rgba(10, 8, 14, 0.4);
+  }
+  .mesa-peca {
+    position: absolute;
+    inset: 0;
+    z-index: 15;
+    border-left: 0;
+    transform: translateY(100%);
+    transition: transform var(--transicao);
+    display: block;
+  }
+  .mesa-peca--aberta { transform: none; }
+  .mesa-cena-aberta { grid-template-columns: 1fr; }
+  .mesa-ref dl { grid-template-columns: 1fr; }
+}
+
+
+/* ---------- a Mesa em TELA CHEIA (o shell some) ---------- */
+.simples-corpo--imersa { padding: 0; max-width: none; width: 100%; margin: 0; gap: 0; }
+.simples-corpo--imersa .simples-com-placa { display: block; width: 100%; }
+.mesa--imersa {
+  width: 100%;
+  height: 100dvh;
+  min-height: 100dvh;
+  border: 0;
+  border-radius: 0;
+}
+.mesa-by {
+  font-size: 0.72rem;
+  color: var(--text-2);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.mesa-by strong { font-weight: 600; color: var(--text-1); }
+.mesa-nav__org {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.mesa-nav__org strong {
+  font-size: 0.95rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mesa-nav__rodape { position: relative; padding: 6px 8px 10px; }
+.mesa-me {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: var(--raio-s);
+  background: none;
+  color: var(--text-1);
+  font-size: 0.86rem;
+  cursor: pointer;
+}
+.mesa-me:hover { background: var(--bg-3); color: var(--text-0); }
+.mesa-me__av {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--text-0);
+  color: var(--bg-2);
+  display: grid;
+  place-items: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  flex: 0 0 auto;
+}
+.mesa-me__nome {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mesa-menu {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 8px;
+  right: 8px;
+  z-index: 25;
+  background: var(--bg-2);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-m);
+  box-shadow: var(--sombra-2);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.mesa-menu__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: var(--raio-s);
+  background: none;
+  color: var(--text-0);
+  font-size: 0.88rem;
+  text-decoration: none;
+  cursor: pointer;
+}
+.mesa-menu__item:hover { background: var(--bg-1); }
+.mesa-menu__ferramentas {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  padding: 6px 8px 2px;
+  border-top: 1px solid var(--borda);
+}
+
+/* ---------- o charme do dia e da hora (mockup) ---------- */
+.mesa-partida {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+.mesa-agora {
+  margin-left: auto;
+  font-size: 0.78rem;
+  color: var(--text-2);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.mesa-chat__topo .mesa-pecas-chips { margin-left: 0; }
+.mesa-msg__quando {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.7rem;
+  color: var(--text-2);
+}
+.mesa-msg--dono .mesa-msg__quando { text-align: right; }
+@media (max-width: 900px) {
+  .mesa-agora { display: none; }
+}
+
+/* ---------- Acervo e Entregas dentro da Mesa ---------- */
+.mesa-filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+.mesa-filtros input[type='text'],
+.mesa-filtros input:not([type]),
+.mesa-filtros input[placeholder] {
+  flex: 1;
+  min-width: 180px;
+  border: 1px solid var(--borda);
+  border-radius: 999px;
+  background: var(--bg-2);
+  color: var(--text-0);
+  font: inherit;
+  font-size: 0.86rem;
+  padding: 7px 14px;
+}
+.mesa-filtros label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: var(--text-2);
+}
+.mesa-filtros input[type='date'] {
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-s);
+  background: var(--bg-2);
+  color: var(--text-0);
+  font: inherit;
+  font-size: 0.82rem;
+  padding: 5px 8px;
+}
+.mesa-acv-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(108px, 1fr));
+  gap: 12px;
+}
+.mesa-acv-item { position: relative; display: flex; flex-direction: column; gap: 4px; }
+.mesa-acv-item .mesa-quadro { aspect-ratio: 1 / 1; }
+.mesa-acv-doc { display: grid; place-items: center; color: var(--text-2); }
+.mesa-acv-nome {
+  font-size: 0.72rem;
+  color: var(--text-1);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mesa-acv-quando { font-size: 0.68rem; color: var(--text-2); }
+.mesa-acv-excluir {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 22px;
+  height: 22px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(29, 29, 31, 0.55);
+  color: #fff;
+  font-size: 0.7rem;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+.mesa-acv-item:hover .mesa-acv-excluir { opacity: 1; }
+.mesa-entrega {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 1px solid var(--borda);
+}
+.mesa-entrega:first-of-type { border-top: 0; }
+.mesa-entrega__info { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.mesa-entrega__info strong {
+  font-size: 0.88rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- '+ Novo' e o Dashboard da Mesa ---------- */
+.mesa-novo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 14px;
+  border: 1px solid var(--borda);
+  border-radius: 999px;
+  background: var(--bg-2);
+  color: var(--text-0);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+.mesa-novo:hover { background: var(--bg-3); border-color: var(--borda-forte); }
+.mesa-tempo-ganho {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 18px 20px;
+  border-radius: var(--raio-m);
+  background: var(--accent-suave);
+}
+.mesa-tempo-ganho strong {
+  font-size: 2.1rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--accent-forte);
+  font-variant-numeric: tabular-nums;
+}
+.mesa-tempo-ganho span { font-size: 0.85rem; color: var(--text-1); line-height: 1.5; }
+.mesa-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+}
+.mesa-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 16px;
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-m);
+  background: var(--bg-2);
+}
+.mesa-stat strong {
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.mesa-stat span { font-size: 0.78rem; color: var(--text-2); line-height: 1.35; }
+
+/* ---------- o escudinho charmoso ---------- */
+.mesa-brasao {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  flex: 0 0 auto;
+}
+.mesa-me__av--brasao {
+  background: none;
+  object-fit: contain;
+  border-radius: 0;
+  padding: 1px;
+}
+
+.mesa-partida--rente { justify-content: flex-start; margin: 0 0 10px; }
+
+/* a Sala das máquinas dentro do painel da Mesa */
+.config-embutida { display: flex; flex-direction: column; gap: 14px; }
+.config-embutida .pagina-cabecalho h1 { font-size: 1.1rem; }
+.config-embutida .pagina-cabecalho { margin: 0; }
+
+/* ---------- o passe do mockup (26/08, tarde) ---------- */
+/* o divisor arrastável do painel direito */
+.mesa-divisor {
+  position: absolute;
+  left: -3px;
+  top: 0;
+  bottom: 0;
+  width: 7px;
+  cursor: col-resize;
+  z-index: 5;
+}
+.mesa-divisor:hover { background: var(--accent-suave); }
+@media (max-width: 900px) { .mesa-divisor { display: none; } }
+
+/* os grupos da lista de conversas (Hoje / Esta semana / o mês) */
+.mesa-nav__grupo {
+  padding: 14px 10px 4px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-2);
+}
+
+/* a identidade no topo do rail */
+.mesa-nav__org-nome { display: flex; flex-direction: column; min-width: 0; }
+.mesa-nav__org-nome .mesa-by { font-size: 0.66rem; }
+
+/* o rodapé do Acervo com os números */
+.mesa-nav__acervo { justify-content: space-between; }
+.mesa-nav__acervo-rotulo { display: inline-flex; align-items: center; gap: 8px; }
+.mesa-nav__acervo-conta { font-size: 0.72rem; color: var(--text-2); white-space: nowrap; }
+.mesa-nav__acervo-conta em,
+.mesa-pendencia { font-style: normal; color: var(--coral-forte); }
+
+/* a nota da trava no painel do acervo */
+.mesa-trava-nota {
+  margin: 0;
+  padding: 10px 14px;
+  border-left: 3px solid var(--borda-forte);
+  background: var(--bg-1);
+  border-radius: 0 var(--raio-s) var(--raio-s) 0;
+  font-size: 0.85rem;
+  color: var(--text-1);
+  line-height: 1.5;
+}
+
+/* as seções do acervo na visão Todas */
+.mesa-acv-bloco { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+.mesa-acv-bloco__topo {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+.mesa-acv-bloco__topo h4 { margin: 0; font-size: 0.95rem; }
+.mesa-acv-bloco__topo span { font-size: 0.76rem; color: var(--text-2); }
+.mesa-acv-nota { margin: 0; }
+
+/* o seletor de período */
+.mesa-filtro-periodo {
+  border: 1px solid var(--borda);
+  border-radius: 999px;
+  background: var(--bg-2);
+  color: var(--text-0);
+  font: inherit;
+  font-size: 0.84rem;
+  padding: 7px 12px;
+  cursor: pointer;
+}
+
+/* o título do chat vira o título da conversa — pode ser longo */
+.mesa-chat__topo h2 {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+/* ---------- o rail organizável (renomear, fixar, grupos, apagar) ---------- */
+.mesa-nav__linha { position: relative; }
+.mesa-nav__linha .mesa-nav__item { padding-right: 28px; }
+.mesa-nav__mais {
+  position: absolute;
+  right: 2px;
+  top: 6px;
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: var(--raio-s);
+  background: none;
+  color: var(--text-2);
+  cursor: pointer;
+  opacity: 0;
+  font-size: 1rem;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+}
+.mesa-nav__linha:hover .mesa-nav__mais,
+.mesa-nav__mais[aria-expanded='true'] { opacity: 1; }
+.mesa-nav__mais:hover { background: var(--bg-3); color: var(--text-0); }
+.mesa-conv-veu { position: fixed; inset: 0; z-index: 30; }
+.mesa-conv-menu {
+  position: absolute;
+  right: 4px;
+  top: 30px;
+  z-index: 31;
+  min-width: 190px;
+  display: flex;
+  flex-direction: column;
+  padding: 6px;
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-m);
+  background: var(--bg-2);
+  box-shadow: var(--sombra-1);
+}
+.mesa-conv-menu button {
+  text-align: left;
+  padding: 7px 10px;
+  border: 0;
+  border-radius: var(--raio-s);
+  background: none;
+  color: var(--text-0);
+  font-size: 0.84rem;
+  cursor: pointer;
+}
+.mesa-conv-menu button:hover { background: var(--bg-3); }
+.mesa-conv-menu button.mesa-conv-menu__apagar { color: var(--erro); }
+.mesa-conv-menu__grupos {
+  display: flex;
+  flex-direction: column;
+  margin: 2px 0 2px 10px;
+  padding-left: 6px;
+  border-left: 1px solid var(--borda);
+}
+.mesa-conv-menu__grupos input,
+.mesa-nav__renome {
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-s);
+  background: var(--bg-1);
+  color: var(--text-0);
+  font: inherit;
+  font-size: 0.84rem;
+  padding: 6px 8px;
+}
+.mesa-nav__renome { width: 100%; margin: 2px 0; }
+.mesa-nav__vermais {
+  display: block;
+  margin: 2px 0 4px;
+  padding: 4px 10px;
+  border: 0;
+  background: none;
+  color: var(--accent-forte);
+  font-size: 0.76rem;
+  cursor: pointer;
+  text-align: left;
+}
+.mesa-nav__vermais:hover { text-decoration: underline; }
+
+/* pastas do acervo abríveis (a visão do mockup) */
+.mesa-acv-abrir {
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-weight: 650;
+  color: var(--text-0);
+  cursor: pointer;
+}
+.mesa-acv-abrir:hover { color: var(--accent-forte); }
+.mesa-acv-abrir span { color: var(--text-2); }
+.mesa-acv-voltar {
+  border: 0;
+  background: none;
+  padding: 0;
+  margin-right: 8px;
+  font: inherit;
+  font-size: 0.8rem;
+  color: var(--accent-forte);
+  cursor: pointer;
+}
+.mesa-acv-voltar:hover { text-decoration: underline; }
+
+/* subpasta criada pela IA: leve recuo para ler como filha da pasta */
+.mesa-acv-abrir--sub { padding-left: 12px; font-weight: 600; }
+
+/* a bolinha de estado da conversa — cada cor quer dizer UMA coisa */
+.mesa-bolinha {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 7px;
+  flex: 0 0 auto;
+}
+.mesa-bolinha--trabalhando { background: #f59f00; }
+.mesa-bolinha--precisa_de_voce { background: var(--coral); }
+.mesa-bolinha--entregue { background: #34a853; }
+
+/* o tema mora na Sala das máquinas */
+.mesa-aparencia {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-m);
+  background: var(--bg-1);
+  font-size: 0.88rem;
+}
+
+/* o cartão do caminho de partida (motor → sabatina) */
+.mesa-cartao--partida {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 420px;
+  margin: 0 auto 18px;
+  text-align: left;
+}
+.mesa-cartao--partida strong { font-size: 0.95rem; }
+.mesa-cartao--partida span { font-size: 0.85rem; color: var(--text-1); line-height: 1.5; }
+
+/* ---------- voz na Mesa: microfone e leitura ---------- */
+.mesa-mic--gravando {
+  color: var(--coral-forte);
+  background: var(--coral-suave);
+  animation: mesa-mic-pulso 1.2s ease-in-out infinite;
+}
+@keyframes mesa-mic-pulso {
+  0%, 100% { box-shadow: 0 0 0 0 var(--coral-suave); }
+  50% { box-shadow: 0 0 0 5px var(--coral-suave); }
+}
+@media (prefers-reduced-motion: reduce) { .mesa-mic--gravando { animation: none; } }
+.mesa-ouvir {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  margin-right: 6px;
+  vertical-align: middle;
+  border: 0;
+  border-radius: var(--raio-s);
+  background: none;
+  color: var(--text-2);
+  cursor: pointer;
+}
+.mesa-ouvir:hover { color: var(--text-0); background: var(--bg-3); }
+.mesa-ouvir--tocando { color: var(--accent-forte); }
+.mesa-ouvir svg { width: 14px; height: 14px; }
+
+/* a faixa de SEM SALDO — coral, em cima do chat, com o caminho da solução */
+.mesa-saldo {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 10px 16px;
+  background: var(--coral-suave);
+  border-bottom: 1px solid var(--coral);
+  font-size: 0.85rem;
+}
+.mesa-saldo strong { color: var(--coral-forte); }
+.mesa-saldo span { color: var(--text-1); flex: 1; min-width: 240px; }
+.mesa-saldo .mesa-btn { flex: 0 0 auto; }
+
+.mesa-link--recusa { color: var(--coral-forte); }
+
+/* o X do anexo errado + chips grudados na mensagem + bolinha à direita */
+.mesa-anexo { display: inline-flex; align-items: center; gap: 6px; }
+.mesa-anexo__tirar {
+  border: 0;
+  background: none;
+  padding: 0;
+  font-size: 0.72rem;
+  line-height: 1;
+  color: inherit;
+  opacity: 0.65;
+  cursor: pointer;
+}
+.mesa-anexo__tirar:hover { opacity: 1; }
+.mesa-msg__anexos { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; justify-content: flex-end; }
+.mesa-msg--ia .mesa-msg__anexos { justify-content: flex-start; }
+.mesa-nav__titulo { display: flex; align-items: center; gap: 6px; }
+.mesa-nav__titulo-texto { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mesa-nav__titulo .mesa-bolinha { margin-left: auto; margin-right: 0; }
+
+/* ── densidade da tela-alvo (27/08) ── */
+.mesa-origem--codigo { background: var(--bg-1); color: var(--text-2); }
+.mesa-origem--slot { background: var(--coral-suave); color: var(--erro); }
+.mesa-producao {
+  margin: 2px 0 0;
+  font-size: 0.78rem;
+  color: var(--text-2);
+}
+.mesa-aviso-plano {
+  margin: 8px 0 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--bg-1);
+  font-size: 0.8rem;
+  color: var(--text-2);
+}
+.mesa-aviso-plano strong { color: var(--text-1); }
+.mesa-cena__tempo {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  font-size: 0.62rem;
+  font-variant-numeric: tabular-nums;
+  background: color-mix(in srgb, var(--bg-0) 82%, transparent);
+  border-radius: 6px;
+  padding: 1px 5px;
+  color: var(--text-2);
+}
+.mesa-cena { position: relative; }
+.mesa-cena__fonte {
+  display: block;
+  font-size: 0.62rem;
+  color: var(--azul, #0066cc);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mesa-cartao__superado {
+  font-size: 0.78rem;
+  color: var(--text-2);
+  white-space: nowrap;
+}
+.mesa-me__quem {
+  display: block;
+  font-style: normal;
+  font-size: 0.68rem;
+  color: var(--text-2);
+}
+button.mesa-material {
+  border: 0;
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+button.mesa-material:disabled { cursor: default; }
+
+.mesa-msg__atalho { display: inline-block; margin-top: 6px; }
+
+/* ==================================================================
+   A ENTREGAS NA LINGUAGEM DA MESA (30/08/2026)
+
+   O app falava DOIS idiomas ao mesmo tempo: a Mesa (a tela do mockup)
+   e o desenho clássico no resto. O dono flagrou na primeira tela que a
+   demo atravessa depois da Mesa — "isso estraga a experiência" — e ele
+   tem razão: numa apresentação, a troca de vocabulário lê como remendo.
+
+   Aqui a Entregas passa a usar as MESMAS primitivas da Mesa: pílula no
+   lugar do botão retangular, filete no lugar de caixa dentro de caixa,
+   cartão liso, e a cor do PRÉDIO reservada ao gesto principal. Nada de
+   lógica mudou — a marcação desta tela já era semântica e própria dela,
+   então bastou trocar a linguagem. Este arquivo carrega DEPOIS do
+   app.css, então empatar a especificidade já vence.
+   ================================================================== */
+
+.lista-entregas { gap: 14px; }
+
+/* Some a barra âmbar na lateral: o "espera você" já está dito em
+   palavra no cabeçalho da seção e nos botões. Cor que o olho precisa
+   decifrar é pior que a frase que ele lê. */
+.entrega-card {
+  background: var(--bg-1);
+  border: 1px solid var(--borda);
+  border-left: 1px solid var(--borda);
+  border-radius: var(--raio-g);
+  padding: 16px 18px 14px;
+}
+.entrega-card .trabalho-cabecalho { align-items: center; gap: 14px; }
+.entrega-card .entrega-meta { font-size: 0.8rem; color: var(--text-2); }
+
+/* Ações = as pílulas da Mesa. A que o dono mais aperta ("Está bom")
+   ganha a cor do prédio; as outras ficam neutras para não competir com
+   ela — o gesto principal tem de ser óbvio à distância de uma sala. */
+.entrega-card .entrega-acoes { gap: 8px; }
+.entrega-card .botao,
+.hist-trabalhos .botao {
+  border: 1px solid var(--borda-forte);
+  background: var(--bg-2);
+  color: var(--text-0);
+  border-radius: 999px;
+  padding: 7px 15px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  box-shadow: none;
+}
+.entrega-card .botao:hover:not(:disabled),
+.hist-trabalhos .botao:hover:not(:disabled) {
+  border-color: var(--predio-primaria);
+  background: var(--bg-2);
+}
+.entrega-card .botao-ok {
+  background: var(--predio-primaria);
+  border-color: var(--predio-primaria);
+  color: var(--predio-ink, var(--accent-ink));
+}
+.entrega-card .botao-ok:hover:not(:disabled) {
+  background: var(--predio-primaria);
+  opacity: 0.88;
+}
+.entrega-card .botao-perigo { color: var(--text-1); }
+.entrega-card .botao-perigo:hover:not(:disabled) {
+  border-color: var(--erro);
+  color: var(--erro);
+  background: var(--bg-2);
+}
+
+/* A linha de arquivo vira LINHA (o desenho de .mesa-entrega): filete em
+   cima e nada de caixa dentro de caixa. */
+.entrega-card .etapa-linha,
+.entrega-card .etapa-linha.etapa-aprovada,
+.entrega-card .etapa-linha.etapa-rejeitada {
+  border: 0;
+  border-top: 1px solid var(--borda);
+  border-radius: 0;
+  background: none;
+  padding: 12px 0 10px;
+}
+.entrega-card .etapa-linha:first-of-type { border-top: 0; padding-top: 14px; }
+.entrega-card .etapa-topo { gap: 12px; }
+.entrega-card .entrega-nome { font-size: 0.9rem; }
+.entrega-card .etapa-acoes { gap: 8px; }
+
+/* Histórico: uma lista com filete, não uma pilha de caixas. */
+.hist-trabalhos { display: flex; flex-direction: column; gap: 0; }
+.hist-trabalhos > li,
+.hist-trabalhos > details {
+  border: 0;
+  border-top: 1px solid var(--borda);
+  border-radius: 0;
+  background: none;
+  padding: 10px 2px;
+}
+.hist-trabalhos > li:first-child,
+.hist-trabalhos > details:first-child { border-top: 0; }
+
+/* Dois acertos depois de ver a tela no ar (30/08/2026):
+
+   1. O visto de CADA ARQUIVO tinha virado azul cheio igual ao "Está bom",
+      e dois primários na mesma tela cancelam um ao outro — quem olha de
+      longe não sabe onde apertar. O gesto do trabalho INTEIRO fica com a
+      cor do prédio; o de arquivo volta a ser neutro.
+   2. O player de uma entrega aberta antes de bufferizar aparecia como uma
+      faixa branca vazia (readyState 0, sem poster). Ganha altura mínima e
+      fundo escuro: lê como vídeo esperando, não como caixa quebrada. */
+.entrega-card .etapa-acoes .botao-ok {
+  background: var(--bg-2);
+  border-color: var(--borda-forte);
+  color: var(--text-0);
+}
+.entrega-card .etapa-acoes .botao-ok:hover:not(:disabled) {
+  border-color: var(--predio-primaria);
+  color: var(--predio-primaria);
+  background: var(--bg-2);
+  opacity: 1;
+}
+.entrega-card .etapa-visor video {
+  min-height: 260px;
+  background: #0a0a0a;
+  border-radius: var(--raio-m);
+}
+
+/* ==================================================================
+   O ACERVO NA LINGUAGEM DA MESA (30/08/2026)
+
+   Terceira tela do caminho da demo (Mesa -> Entregas -> Acervo). Ela
+   carregava três marcas do desenho antigo: aba com sublinhado, linha
+   em caixa e vazio com borda tracejada. A Mesa já tem a versão dela
+   desta mesma tela (.mesa-acv-*) — aqui a versão grande passa a falar
+   igual: PÍLULA para filtro, LINHA com filete para arquivo, e o vazio
+   dito em texto, sem moldura pontilhada pedindo atenção.
+   ================================================================== */
+
+/* Abas viram pílulas. A ativa preenche com a tinta do texto (a mesma
+   convenção do .mesa-chip), não com a cor do prédio — essa fica
+   reservada ao gesto que decide, para não haver dois "principais". */
+.acv-abas {
+  border-bottom: 0;
+  gap: 8px;
+  padding-bottom: 2px;
+}
+.acv-aba {
+  border: 1px solid var(--borda-forte);
+  border-radius: 999px;
+  padding: 6px 14px;
+  background: var(--bg-2);
+  color: var(--text-1);
+  margin-bottom: 0;
+}
+.acv-aba:hover { background: var(--bg-2); color: var(--text-0); border-color: var(--text-2); }
+.acv-aba.on {
+  background: var(--text-0);
+  border-color: var(--text-0);
+  color: var(--bg-2);
+  font-weight: 600;
+}
+.acv-aba.on svg { color: var(--bg-2); }
+.acv-aba.on .acv-aba-n {
+  background: transparent;
+  border-color: color-mix(in srgb, var(--bg-2) 45%, transparent);
+  color: var(--bg-2);
+}
+
+/* Arquivo vira LINHA (o desenho de .mesa-entrega): filete em cima e
+   nada de caixa dentro de caixa. */
+.acv-lista { gap: 0; }
+.acv-linha {
+  border: 0;
+  border-top: 1px solid var(--borda);
+  border-radius: 0;
+  background: none;
+  padding: 12px 2px;
+}
+.acv-lista > .acv-linha:first-child { border-top: 0; }
+.acv-thumb { width: 52px; height: 52px; border-radius: var(--raio-s); }
+.acv-renomear { display: flex; flex-direction: column; gap: 12px; padding: 18px 0; border-block: 1px solid var(--borda); margin-block: 12px; }
+.acv-renomear p { margin: 0; overflow-wrap: anywhere; }
+.acv-renomear label { display: flex; flex-direction: column; gap: 6px; }
+.acv-renomear input { width: 100%; min-width: 0; }
+.acv-renomear-acoes { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* O vazio não precisa de moldura tracejada: quem não tem nada ali só
+   precisa da frase. O mesmo vale para o aviso de teto. */
+.acv-vazio,
+.acv-teto {
+  border: 0;
+  border-radius: 0;
+  padding: 14px 2px;
+}
+.acv-teto { border-top: 1px solid var(--borda); }
+
+/* Botões do cabeçalho na pílula da Mesa. */
+.acv-cabecalho-acoes .botao {
+  border: 1px solid var(--borda-forte);
+  background: var(--bg-2);
+  color: var(--text-0);
+  border-radius: 999px;
+  padding: 7px 15px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  box-shadow: none;
+}
+.acv-cabecalho-acoes .botao:hover:not(:disabled) {
+  border-color: var(--predio-primaria);
+  background: var(--bg-2);
+}
+
+/* ==================================================================
+   AS PRIMITIVAS NA LINGUAGEM DA MESA (30/08/2026)
+
+   Portar tela por tela ia demorar e deixar o app remendado no meio do
+   caminho. O que separa a Mesa do resto não são as telas: são DUAS
+   primitivas que todas elas usam — o botão e o alerta. Reescritas aqui,
+   toda tela antiga (Conversar, Visão geral, Estúdio, Configurações)
+   passa a falar a mesma língua de uma vez.
+
+   O botão vira PÍLULA lisa (o .mesa-btn), sem gradiente e sem sombra;
+   só o primário leva a cor do prédio. Os antigos "ok" e "perigo"
+   pintavam a borda de verde e vermelho o tempo todo — semáforo aceso
+   sem motivo; agora a cor só aparece no hover, quando o gesto está
+   prestes a acontecer.
+
+   O alerta perde o retângulo colorido e vira FILETE na lateral (o
+   .mesa-item): a informação continua toda lá, sem gritar.
+
+   A landing NÃO usa .botao (conferido), então nada disso vaza para o
+   site público.
+   ================================================================== */
+
+.botao {
+  border-radius: 999px;
+  border-color: var(--borda-forte);
+  background: var(--bg-2);
+  color: var(--text-0);
+  padding: 8px 18px;
+  font-size: 0.88rem;
+  box-shadow: none;
+}
+.botao:hover:not(:disabled) {
+  border-color: var(--predio-primaria, var(--predio-acento, var(--accent)));
+  background: var(--bg-2);
+}
+.botao-pequeno { padding: 6px 14px; font-size: 0.82rem; }
+
+.botao-primario {
+  background: var(--predio-primaria, var(--predio-acento, var(--accent)));
+  border-color: var(--predio-primaria, var(--predio-acento, var(--accent)));
+  color: var(--predio-ink, var(--accent-ink));
+}
+.botao-primario:hover:not(:disabled) {
+  background: var(--predio-primaria, var(--predio-acento, var(--accent)));
+  opacity: 0.88;
+}
+
+.botao-fantasma { background: var(--bg-2); border-color: var(--borda-forte); color: var(--text-0); }
+.botao-fantasma:hover:not(:disabled) {
+  background: var(--bg-2);
+  border-color: var(--predio-primaria, var(--predio-acento, var(--accent)));
+}
+
+.botao-ok { background: var(--bg-2); border-color: var(--borda-forte); color: var(--text-0); }
+.botao-ok:hover:not(:disabled) { background: var(--bg-2); border-color: var(--ok); color: var(--ok); }
+
+.botao-perigo { background: var(--bg-2); border-color: var(--borda-forte); color: var(--text-1); }
+.botao-perigo:hover:not(:disabled) { background: var(--bg-2); border-color: var(--erro); color: var(--erro); }
+
+.alerta {
+  border: 0;
+  border-left: 3px solid var(--borda-forte);
+  border-radius: 0;
+  background: none;
+  padding: 8px 0 8px 12px;
+}
+.alerta-erro { border-left-color: var(--erro); color: var(--erro-ink); background: none; }
+.alerta-ok { border-left-color: var(--ok); color: var(--ok-ink); background: none; }
+.alerta-aviso { border: 0; border-left: 3px solid var(--aviso); color: var(--text-0); background: none; }
+
+/* O seletor segmentado (filtros da Entregas, escolha de esforço) era uma
+   caixinha cinza com abas coladas — o desenho antigo. Vira o CHIP da Mesa:
+   pílulas soltas, e a escolhida preenchida com a tinta do texto. Mesma
+   convenção do .mesa-chip[aria-current], para o olho não aprender duas
+   gramáticas de "selecionado" dentro do mesmo produto. */
+.seletor-esforco {
+  background: none;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.esforco-opcao {
+  border: 1px solid var(--borda-forte);
+  border-radius: 999px;
+  background: var(--bg-2);
+  color: var(--text-1);
+  padding: 6px 14px;
+  font-size: 0.84rem;
+  font-weight: 500;
+  box-shadow: none;
+}
+.esforco-opcao:hover { color: var(--text-0); border-color: var(--text-2); }
+.esforco-opcao.ativa {
+  background: var(--text-0);
+  border-color: var(--text-0);
+  color: var(--bg-2);
+  font-weight: 600;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   O QUE DÁ PARA MELHORAR (30/08/2026)
+   A peça termina falando: o escritório diz o que daria para melhorar e o dono
+   vira isso em tarefa com um clique. Fica na linguagem da Mesa (a mesma que a
+   vitrine já usa) e ABAIXO do resultado — é o degrau seguinte, nunca disputa
+   atenção com a peça nem com o par grande de aprovar.
+   ══════════════════════════════════════════════════════════════════════════ */
+.melhorar {
+  margin: 14px 0 0;
+  padding: 14px 16px;
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-m, 10px);
+  background: var(--bg-1);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.melhorar-topo {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.melhorar-topo strong { font-size: 14px; }
+.melhorar-topo .texto-suave { font-size: 12.5px; }
+.melhorar-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  justify-content: space-between;
+  padding-top: 10px;
+  border-top: 1px solid var(--borda);
+}
+.melhorar-texto { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.melhorar-texto strong { font-size: 13.5px; font-weight: 600; line-height: 1.45; }
+.melhorar-texto .texto-suave { font-size: 12.5px; line-height: 1.45; }
+.melhorar-item .botao { flex: none; }
+/* O TETO ocupa o lugar da lista, não fica ao lado dela: quando o que falta é
+   material que não existe, a resposta honesta é NENHUMA sugestão. */
+/* Os tokens de texto da casa são --text-0/1/2 (tokens.css); `--texto-suave` e
+   `--texto` não existem, e cor inválida não quebra nada — só é IGNORADA, então
+   estes três parágrafos vinham herdando a cor do bloco em silêncio. */
+.melhorar-teto {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-2);
+}
+.melhorar-teto b { color: var(--text-0); }
+.melhorar-aviso {
+  margin: 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--borda);
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--text-2);
+}
+
+/* ── A RESPOSTA DO DONO ──
+   O bloco passou a escutar: ele escreve o que falta, ou fecha o assunto. O
+   campo fica no fim (ler primeiro, responder depois) e o "Está bom assim" é
+   um botão de texto apagado — dizer que a peça está boa é resposta legítima,
+   mas não pode disputar o olho com o par grande de aprovar/rejeitar acima. */
+.melhorar-eu {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--borda);
+}
+.melhorar-campo {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.melhorar-campo label { font-size: 12.5px; color: var(--text-2); }
+/* Fundo de input (--bg-3), não o do bloco: o campo e a caixa dividem o --bg-1
+   e sem isso a área de escrever some dentro do cartão. E aqui NÃO se fixa
+   font-size — passar por cima do `max(16px, 1em)` do ponteiro grosso é
+   reabrir o zoom do iOS no foco. */
+.melhorar-campo textarea {
+  width: 100%;
+  resize: vertical;
+  background: var(--bg-3);
+  line-height: 1.45;
+}
+.melhorar-eu .botao { flex: none; }
+.melhorar-rodape { display: flex; justify-content: flex-end; }
+.melhorar-ok {
+  color: var(--text-2);
+  font-size: 12.5px;
+}
+.melhorar-ok:hover:not(:disabled) { color: var(--text-0); }
+.melhorar-ok:disabled { cursor: default; opacity: 0.6; }
+/* A linha que fica no lugar do bloco depois do "está bom assim": uma frase
+   curta, no lugar de um sumiço que pareceria bug. */
+.melhorar-fechado {
+  margin: 14px 0 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--text-2);
+}
+@media (max-width: 560px) {
+  .melhorar-item { flex-direction: column; align-items: stretch; }
+  .melhorar-item .botao { align-self: flex-start; }
+  .melhorar-eu { flex-direction: column; align-items: stretch; }
+  .melhorar-eu .botao { align-self: flex-start; }
+}

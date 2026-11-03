@@ -1,0 +1,12 @@
+.consumo-ia { border: 1px solid var(--borda, #d9dde5); border-radius: 12px; padding: 12px; margin: 10px 0; min-width: 0; }
+.consumo-ia summary { cursor: pointer; font-weight: 600; }
+.consumo-ia summary small { font-weight: 400; }
+.consumo-ia-tabela { overflow: auto; }
+.consumo-ia th, .consumo-ia td { padding: 8px; text-align: left; font-variant-numeric: tabular-nums; }
+.consumo-ia li { margin: 8px 0; overflow-wrap: anywhere; }
+.conversa-informacoes { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.conversa-informacoes > button { min-height: 44px; padding: 6px 8px; white-space: nowrap; }
+.conversa-assunto:has(> .conversa-informacoes) { padding-bottom: 6px; }
+.conversa-informacoes-caixa { width: min(900px, 100%); min-width: 0; }
+.conversa-informacoes-caixa > header { position: sticky; top: -12px; z-index: 1; background: var(--papel); padding-bottom: 8px; }
+.conversa-informacoes-caixa .consumo-ia, .conversa-informacoes-caixa .origem-entrega { margin: 0; }

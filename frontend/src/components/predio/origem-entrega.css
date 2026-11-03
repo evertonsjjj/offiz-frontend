@@ -1,0 +1,4 @@
+.origem-entrega { margin: 12px 0; padding: 12px; border: 1px solid var(--borda, #d9dde5); border-radius: 12px; min-width: 0; }
+.origem-entrega > summary { cursor: pointer; font-weight: 600; }
+.origem-entrega > p { font-size: .9rem; line-height: 1.5; }
+.origem-entrega .fluxo-quadro { overflow-x: auto; }

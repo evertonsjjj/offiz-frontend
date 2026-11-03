@@ -1,0 +1,40 @@
+.acv .acv-linha { align-items: start; gap: 14px; padding-block: 16px; }
+.acv .acv-abrir { border-radius: var(--raio-s); }
+.acv .acv-thumb { width: 64px; height: 64px; }
+.acv .acv-thumb img { object-fit: contain; }
+.acv .acv-dados { min-width: 0; }
+.acv .acv-nome {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin: 0 0 4px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-0);
+  font: 600 .94rem/1.4 var(--font-body);
+  text-align: start;
+  cursor: pointer;
+}
+.acv .acv-nome:hover { color: var(--accent-forte); }
+.acv .acv-nome:focus-visible { outline: 2px solid var(--accent-forte); outline-offset: 3px; }
+.acv .acv-legenda {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  color: var(--text-1);
+  font-size: .85rem;
+  overflow-wrap: anywhere;
+}
+.acv .acv-meta { display: block; margin-top: 5px; font-family: var(--font-body); overflow-wrap: anywhere; }
+.acv .acv-contagem { color: var(--text-2); font-size: .8rem; }
+.acv .acv-acoes { max-width: 340px; padding-top: 2px; }
+@media (max-width: 720px) {
+  .acv .acv-abas { flex-wrap: wrap; overflow: visible; }
+  .acv .acv-linha { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 10px 12px; }
+  .acv .acv-acoes { grid-column: 1 / -1; max-width: none; justify-content: flex-start; }
+  .acv .acv-cabecalho-acoes { flex-wrap: wrap; }
+}

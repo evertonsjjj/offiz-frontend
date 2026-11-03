@@ -1,0 +1,286 @@
+/* ============================================================
+   Offiz — design tokens · DESENHO CLÁSSICO (jul/2026)
+   Paleta FECHADA: papel creme (#f4efe6), tinta (#2b2431), azul de
+   trabalho (#2f54c4) como cor-herói, coral (#ff6950) reservado a
+   "precisa de você" (HITL) e verde dessaturado como evidência de
+   sucesso — nunca comemoração. Nenhum hue fora desta tabela.
+   O reskin é por TOKEN: o app inteiro já referencia os tokens de acento,
+   fundo e texto — então herda a marca sem tocar nos componentes.
+   ============================================================ */
+
+/* ---- Fontes da marca (vendorizadas — self-hosted, offline/CSP) ----
+   Só a Mona Sans mora aqui: a serifa e a mono vêm por @fontsource, importadas
+   em main.tsx (mesmo princípio — arquivo local, zero requisição externa).
+
+   Saiu daqui a 'Zalando Sans Expanded': ela era a display da identidade
+   anterior e sobreviveu ao redesenho como @font-face órfão — declarada e
+   nunca referenciada por regra nenhuma. Não custava banda (o browser não
+   baixa fonte sem uso), mas o `url()` bastava para o Vite copiar os 147 KB
+   do .ttf para dentro do dist a cada build. */
+@font-face {
+  font-family: 'Mona Sans';
+  src: url('../assets/fonts/mona-sans.woff2') format('woff2');
+  font-weight: 200 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* ---- Tipografia: título SERIFADO (editorial) + UI Mona + mono ----
+     O desenho clássico (jul/2026) pede serifa nos títulos, e desde 14/08/2026
+     ela é REAL: 'IBM Plex Serif' entrou por @fontsource (latin + latin-ext,
+     pesos 400/600/700). Georgia continua na pilha como rede de segurança do
+     primeiro paint, não mais como a fonte que de fato aparecia. */
+  --font-display: 'Instrument Sans', 'Mona Sans', system-ui, 'Segoe UI', sans-serif;
+  --font-body: 'Instrument Sans', 'Mona Sans', system-ui, 'Segoe UI', 'Helvetica Neue', sans-serif;
+  --font-mono: 'IBM Plex Mono', 'Cascadia Code', 'Consolas', monospace;
+
+  /* 09/09/2026 — o navegador precisa SABER em que tema a página está.
+     Sem esta linha, a barra de rolagem, o <select>, o seletor de data do
+     calendário editorial e o preenchimento automático continuavam pintados
+     pelo tema do SISTEMA: quem usava Windows claro com o Offiz no escuro via
+     campos brancos dentro de painéis pretos. Duas declarações consertam todos
+     os controles nativos do produto de uma vez. */
+  color-scheme: light;
+
+  --raio-s: 8px;
+  --raio-m: 12px;
+  --raio-g: 16px;
+
+  --transicao: 200ms cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Identidade por prédio (white-label, reaberta em 08/08/2026): estes são os
+     valores PADRÃO — o prédio de um cliente que definiu cor própria em
+     Configurações → Personalização sobrescreve os três via `temaParaEstilo`,
+     que também calcula a tinta legível sobre o acento (`--accent-ink`). A
+     moldura do Offiz (topbar, fundo, navegação) NÃO muda: ela é o produto. */
+  --predio-primaria: var(--marca-azul);   /* o azul de trabalho — padrão do Offiz */
+  --predio-acento: var(--accent);
+  --predio-fundo: var(--bg-1);
+
+  /* =========================================================
+     AS CORES DA MARCA — os hexes crus, FORA de tema.
+
+     Esta camada existe por um motivo só: ser a ÚNICA fonte de verdade
+     dos valores. Antes dela a paleta estava escrita duas vezes — aqui
+     e de novo em landing.css, no escopo `.lp`, com os mesmos dezessete
+     hexes copiados à mão. Funcionava, e divergia no primeiro dia em
+     que alguém mudasse o azul num lugar só.
+
+     A landing continua LIGHT-ONLY (página institucional tem UM look):
+     ela aponta para `--marca-*`, que não muda no tema escuro, em vez
+     de para `--accent`/`--bg-*`, que mudam. Uma fonte de verdade, dois
+     comportamentos de tema.
+     ========================================================= */
+  --marca-creme: #f5f5f7;        /* a página */
+  --marca-faixa: #efeff2;        /* realce sutil (o "term" do desenho) */
+  --marca-papel: #ffffff;        /* o cartão */
+  --marca-tinta: #1d1d1f;        /* a tinta ameixa — nunca preto puro */
+  --marca-tinta-media: #4a4a4f;
+  --marca-tinta-suave: #66666b;  /* AA sobre creme e papel — não clarear */
+  --marca-azul: #0066cc;         /* o azul de trabalho */
+  --marca-azul-forte: #004c99;
+  --marca-azul-suave: #e7f0fb;
+  --marca-coral: #e8563f;        /* "precisa de você" */
+  --marca-coral-forte: #cc3e28;
+  --marca-coral-suave: #fbe9e5;
+  --marca-verde: #1e9e63;        /* evidência, não comemoração */
+  --marca-verde-suave: #e7f4ed;
+  --marca-telha: #b3271b;        /* perigo */
+  --marca-ambar: #8a5e0c;
+  --marca-linha: #e6e6ea;
+  --marca-linha-forte: #d6d6db;
+
+  /* =========================================================
+     BASE CLARA — o tema padrão, montado sobre as cores da marca.
+     Daqui para baixo os nomes falam do PAPEL do token na tela, não do
+     valor: é o que o app inteiro consome.
+     ========================================================= */
+
+  /* Superfícies — creme de papel */
+  --bg-0: var(--marca-creme);   /* página */
+  --bg-1: var(--marca-faixa);   /* faixa/realce sutil */
+  --bg-2: var(--marca-papel);   /* cards (papel) */
+  --bg-3: var(--marca-papel);   /* cards elevados / inputs */
+  /* O brilho que corre pelo esqueleto de carregamento. Existe como token
+     próprio porque o gradiente usava --bg-2 → --bg-3 → --bg-2, e os dois são
+     #ffffff no claro e #1a1a1d no escuro: contraste 1:1, animação rodando
+     sobre um retângulo parado. Quem esperava não via sinal de vida nenhum. */
+  --esqueleto-brilho: #e9e9ee;
+  --bg-elevado: var(--marca-papel);
+
+  /* Texto — tinta, nunca preto puro */
+  --text-0: var(--marca-tinta);
+  --text-1: var(--marca-tinta-media);
+  /* --text-2 e a cor de TODO texto explicativo do produto (.texto-suave, 145
+     usos, e os placeholders). Em #938c98 dava 3,1:1 sobre os fundos claros —
+     reprova o AA de 4,5:1 justamente no texto que ensina o usuario a usar o
+     app. #6f6878 da 5,1:1 e mantem a tinta ameixa da marca. */
+  --text-2: var(--marca-tinta-suave);
+
+  /* Cor-herói = AZUL DE TRABALHO (ação primária, links, foco). */
+  --accent: var(--marca-azul);
+  --accent-fundo: var(--accent); /* fundo de ação, separado dos links e realces */
+  --accent-forte: var(--marca-azul-forte);
+  --accent-ink: #ffffff;         /* texto sobre botão azul */
+  --link: var(--marca-azul);               /* azul como texto */
+  --accent-suave: var(--marca-azul-suave);       /* chip/realce azul sobre papel */
+  --janela-apagada: var(--marca-linha-forte);
+
+  /* CORAL = "precisa de você" (HITL/atenção). Nunca decorativo. */
+  --coral: var(--marca-coral);
+  --coral-forte: var(--marca-coral-forte);
+  --coral-suave: var(--marca-coral-suave);
+  --coral-ink: #ffffff;
+  /* A tinta do coral SOBRE o coral suave (chip, contador de pendentes). O coral
+     da marca é um laranja claro: #ef5b43 sobre #ffe9e4 dá 2,9:1 e #ff6950 com
+     branco em cima dá 2,8:1 — os dois reprovam o AA de texto pequeno, que é
+     exatamente o tamanho do contador. Este é o mesmo hue, num degrau escuro:
+     6,8:1 sobre o coral suave. */
+  --coral-ink-forte: #a3311f;
+
+  /* Semânticas — verde é EVIDÊNCIA (dessaturado, não comemoração);
+     perigo é telha, distinto do coral (que é chamado de atenção). */
+  --ok: var(--marca-verde);                 /* evidência de sucesso */
+  --erro: var(--marca-telha);               /* perigo/destrutivo */
+  --aviso: var(--marca-ambar);              /* âmbar */
+  --info: var(--marca-azul);               /* azul — informação */
+  --erro-ink: var(--marca-telha);           /* texto de alerta de erro */
+  --ok-ink: #14653e;             /* texto de alerta de sucesso */
+  --ok-suave: var(--marca-verde-suave);
+  --aviso-suave: #faf1de;
+  --erro-suave: #fbedeb;
+
+  /* Bordas e sombras — linha de papel, sombra curta (nada de nuvem) */
+  --borda: var(--marca-linha);
+  --borda-forte: var(--marca-linha-forte);
+  --hover: rgba(29, 29, 31, 0.05);
+  --sombra-1: 0 1px 2px rgba(29, 29, 31, 0.05);
+  --sombra-2: 0 1px 2px rgba(29, 29, 31, 0.05), 0 10px 28px rgba(29, 29, 31, 0.08);
+  --sombra-3: 0 1px 2px rgba(29, 29, 31, 0.05), 0 16px 40px rgba(29, 29, 31, 0.12);
+
+  /* =========================================================
+     PAPEL — a superfície da chrome.
+     Estes dois tokens se chamavam `--vidro` e `--platter`: os nomes do
+     desenho visionOS, mantidos no redesenho de jul/2026 "porque ~200
+     regras os consomem". Sobrou um vocabulário que descrevia um
+     material que o produto não usa mais — quem abria o CSS lia vidro e
+     via creme. Renomeados em 14/08/2026; eram 49 usos, não 200.
+     Junto saíram sete tokens do mesmo grupo (--vidro-blur, -sat,
+     -brilho, -fundura, -sombra, --platter-off, --platter-brilho) que
+     não tinham um único consumidor: eram os parâmetros do frost. */
+  --papel: var(--bg-2);        /* superfície de cartão / chrome */
+  --papel-chip: var(--bg-1);   /* fundo de botão ou chip dentro da chrome */
+
+  /* Âncora da tinta: usada nos gradientes de botão e no véu dos modais,
+     onde o que se quer é a COR DA MARCA, não "a cor do texto". */
+  --tinta: var(--marca-tinta);
+
+  /* FUNDO — creme chapado. A atmosfera animada (gradiente lavanda que
+     respirava) saiu com o redesenho: papel não pulsa. */
+  --env: var(--marca-creme);
+}
+
+/* Fundo chapado. Sem gradiente, sem drift, sem grain — o desenho clássico
+   apoia tudo em papel. (A `background-attachment: fixed` continua porque a
+   ShellSimples conta com ela; ver o comentário lá.) */
+body {
+  background: var(--env);
+  background-attachment: fixed;
+}
+
+/* -------------------------------------------------------------
+   .papel — a superfície da chrome: opaca, uma linha, uma sombra
+   curta. Sem backdrop-filter: além de estar fora do desenho, ele
+   custava uma camada de composição por superfície e exigia algo
+   atrás para frostar.
+
+   (Aqui também morava a AURA — o `data-aura` no <html> que pintava a
+   atmosfera de idle/running/needs-you. As regras já tinham saído no
+   redesenho; o hook que setava o atributo saiu em 14/08/2026. Hoje o
+   estado é dito por COMPONENTE: a placa de execução, o contador
+   coral, o selo "precisa de você".)
+   ------------------------------------------------------------- */
+.papel {
+  position: relative;
+  background: var(--bg-2);
+  border: 1px solid var(--borda);
+  box-shadow: var(--sombra-2);
+}
+/* Superfície rebaixada (input/well): no papel, um creme mais fundo com
+   linha — não um poço com sombra interna. */
+.recessed {
+  background: var(--bg-1);
+  box-shadow: inset 0 0 0 1px var(--borda);
+}
+
+/* ===========================================================
+   TEMA ESCURO — a base do produto é CLARA (é o padrão e a lei da
+   marca); o escuro é a variante de quem pede. Valores vindos do
+   mesmo desenho clássico, bloco [data-tema="escuro"].
+
+   Estes hexes ficam LITERAIS de propósito: cada um é usado uma vez, e
+   promovê-los a `--marca-*` sugeriria que a landing (light-only) podia
+   consumi-los — que é justamente o que não pode acontecer.
+   =========================================================== */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --predio-primaria: var(--accent-fundo);
+  --predio-acento: var(--accent-fundo);
+
+  --bg-0: #0e0e10;
+  --bg-1: #141416;
+  --bg-2: #1a1a1d;
+  --bg-3: #1a1a1d;
+  --bg-elevado: #212124;
+  --esqueleto-brilho: #26262c;
+
+  --text-0: #f2f2f4;
+  --text-1: #c7c7cc;
+  /* Mesmo motivo do tema claro: #857c92 dava 3,7-4,1:1 nos fundos escuros.
+     #9d95ab passa AA (5,2-6,2:1) sem virar branco. */
+  --text-2: #98989f;
+
+  /* No escuro o azul de TEXTO clareia (contraste) e o de BOTÃO escurece
+     (o branco em cima dele precisa passar) — por isso os dois diferem. */
+  --accent: #0a84ff;
+  --accent-fundo: #0066cc; /* branco sobre este fundo: 5,57:1 */
+  --accent-forte: #3f9bff;
+  --accent-ink: #ffffff;
+  --link: #6fb1ff;
+  --accent-suave: #16283f;
+  --janela-apagada: #3a3a41;
+
+  --coral: #ff6b52;
+  --coral-forte: #ff5a3d;
+  --coral-suave: #3a231d;
+  --coral-ink: #1a1a1d;
+  /* No escuro o fundo é que escurece, então a tinta é o próprio coral: 5,7:1. */
+  --coral-ink-forte: #ff6b52;
+
+  --ok: #4fc98b;
+  --erro: #e8796c;
+  --aviso: #e0b054;
+  --info: #6fb1ff;
+  --erro-ink: #f6d5d1;
+  --ok-ink: #c9ecd9;
+  --ok-suave: #17281e;
+  --aviso-suave: #2e2412;
+  --erro-suave: #3a2523;
+
+  --borda: #2c2c31;
+  --borda-forte: #3a3a41;
+  --hover: rgba(244, 244, 246, 0.07);
+  --sombra-1: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --sombra-2: 0 1px 2px rgba(0, 0, 0, 0.3), 0 10px 30px rgba(0, 0, 0, 0.4);
+  --sombra-3: 0 1px 2px rgba(0, 0, 0, 0.3), 0 16px 44px rgba(0, 0, 0, 0.5);
+
+  /* Papel escuro — mesmos dois papéis, outra tinta. */
+  --papel: var(--bg-2);
+  --papel-chip: var(--bg-1);
+
+  --tinta: #f2f2f4;
+
+  --env: #0e0e10;
+}

@@ -1,0 +1,6 @@
+.conta-dialogo.confirmacao-dialogo { width: min(480px, calc(100vw - 32px)); }
+.confirmacao-dialogo h2 { margin: 0; font-size: 1.25rem; line-height: 1.35; }
+.confirmacao-dialogo p { margin: 16px 0 22px; line-height: 1.55; overflow-wrap: anywhere; white-space: pre-line; }
+.confirmacao-acoes { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 10px; }
+.confirmacao-acoes .botao { min-height: 44px; }
+.confirmacao-dialogo input { min-height: 44px; width: 100%; }

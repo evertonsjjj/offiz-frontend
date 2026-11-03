@@ -1,0 +1,16 @@
+.contrato-cliente > .botao { margin-top: 12px; }
+.contrato-servicos { margin-top: 16px; }
+.contrato-servicos ul { margin: 12px 0; }
+.contrato-servicos li { display: flex; gap: 12px; justify-content: space-between; align-items: baseline; padding: 12px 0; border-bottom: 1px solid var(--borda); }
+.contrato-servicos li > span { color: var(--text-2); }
+.contrato-operacao { margin-top: 20px; }
+.contrato-confirmacao { border: 1px solid var(--borda); border-radius: 8px; padding: 18px; margin-top: 12px; background: var(--bg-2); }
+.contrato-operacao-acoes { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.contrato-confirmacao-dados { margin: 16px 0; overflow-wrap: anywhere; }
+.contrato-confirmacao-dados dt { color: var(--text-2); }
+.contrato-confirmacao-dados dd { margin: 4px 0 12px; font-weight: 500; }
+.contrato-reservas li { padding: 12px 0; border-bottom: 1px solid var(--borda); overflow-wrap: anywhere; }
+@media (max-width: 600px) {
+  .contrato-servicos li { flex-direction: column; gap: 4px; }
+  .contrato-confirmacao { padding: 14px; }
+}

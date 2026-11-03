@@ -1,0 +1,31 @@
+.area-cliente + .area-cliente { border-top: 1px solid var(--borda); }
+.rotina-juridica { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; padding: 0.65rem 0; border-bottom: 1px solid var(--borda); margin-bottom: 0.75rem; }
+.rotina-juridica > span { color: var(--text-2); font-size: 0.78rem; margin-right: 0.35rem; }
+.rotina-juridica a { display: inline-flex; align-items: center; gap: 0.45rem; padding: 0.55rem 0.75rem; border: 1px solid var(--borda); border-radius: 0.5rem; color: var(--text-1); font-size: 0.85rem; text-decoration: none; }
+.rotina-juridica a:hover, .rotina-juridica a[aria-current="page"] { color: var(--accent); border-color: var(--accent); }
+.rotina-juridica a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+@media (max-width: 600px) { .rotina-juridica > span { flex-basis: 100%; } }
+.area-cliente-cabecalho { display: flex; align-items: flex-start; gap: 0.65rem; padding: 1rem 1.2rem 0.5rem; color: var(--text-1); }
+.area-cliente-cabecalho > svg { flex-shrink: 0; margin-top: 0.1rem; }
+.area-cliente-cabecalho h3 { margin: 0; font-size: 0.95rem; color: var(--text-0); }
+.area-cliente-cabecalho p { margin: 0.25rem 0 0; font-size: 0.8rem; color: var(--text-2); }
+.area-cliente .andar-item { padding-left: 1.6rem; }
+.areas-cliente .andar-item:focus-visible,
+.areas-nav-opcoes a:focus-visible { outline: 2px solid var(--accent); outline-offset: -3px; }
+.areas-vitrine-lista li { align-items: flex-start; padding: 0.5rem 0; }
+.areas-vitrine-lista .predio-vitrine-nome { min-width: 0; }
+.areas-vitrine-lista strong,
+.areas-vitrine-lista small { display: block; }
+.areas-vitrine-lista small { margin-top: 0.2rem; color: var(--text-2); overflow-wrap: anywhere; line-height: 1.45; }
+.areas-vitrine-lista .botao { flex-shrink: 0; }
+.areas-nav-opcoes { width: 280px; max-width: calc(100vw - 32px); max-height: min(70vh, 600px); overflow-y: auto; }
+.area-nav-grupo + .area-nav-grupo { border-top: 1px solid var(--borda); margin-top: 0.3rem; padding-top: 0.3rem; }
+.area-nav-grupo h3 { margin: 0; padding: 8px 12px 3px; color: var(--text-2); font-size: 0.75rem; font-weight: 600; }
+.areas-nav-opcoes a { overflow-wrap: anywhere; }
+@media (max-width: 560px) {
+  .area-cliente-cabecalho { padding: 0.9rem 1rem 0.35rem; }
+  .area-cliente .andar-item { padding-left: 1rem; }
+  .areas-vitrine-lista li { flex-wrap: wrap; }
+  .areas-vitrine-lista .predio-vitrine-nome { flex-basis: calc(100% - 2rem); }
+  .areas-vitrine-lista .botao { margin-left: 1.7rem; }
+}

@@ -1,0 +1,21 @@
+.seletor-escritorios { border: 0; padding: 0; margin: 0 0 1.25rem; min-width: 0; }
+.seletor-escritorios legend { font-weight: 600; }
+.seletor-escritorios > p { margin: .3rem 0 .8rem; }
+.seletor-escritorios-grupos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .65rem; align-items: start; }
+.seletor-escritorios-area { border: 1px solid var(--borda); border-radius: var(--raio-m); background: var(--bg-2); overflow: hidden; }
+.seletor-escritorios-area > summary { display: flex; align-items: center; gap: .7rem; padding: 1rem; cursor: pointer; min-height: 80px; list-style: none; }
+.seletor-escritorios-area > summary::-webkit-details-marker { display: none; }
+.seletor-escritorios-area > summary::after { content: '+'; color: var(--accent); font-size: 1.25rem; }
+.seletor-escritorios-area[open] > summary::after { content: '−'; }
+.seletor-escritorios-area > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: -3px; }
+.seletor-escritorios-titulo { flex: 1; min-width: 0; }
+.seletor-escritorios-titulo strong, .seletor-escritorios-titulo small, .seletor-escritorios-modulo small { display: block; }
+.seletor-escritorios-titulo small, .seletor-escritorios-modulo small { font-size: .83rem; color: var(--text-2); line-height: 1.45; margin-top: .2rem; }
+.seletor-escritorios-titulo .seletor-escritorios-escolhidos { color: var(--accent); }
+.seletor-escritorios-contagem { font-size: .8rem; color: var(--text-2); white-space: nowrap; }
+.seletor-escritorios-modulos { display: grid; padding: 0 .65rem .65rem; gap: .25rem; }
+.seletor-escritorios-modulo { display: flex; gap: .65rem; align-items: flex-start; padding: .7rem; min-height: 44px; cursor: pointer; border-radius: var(--raio-s); }
+.seletor-escritorios-modulo:hover, .seletor-escritorios-modulo.ativo { background: var(--bg-1); }
+.seletor-escritorios .seletor-escritorios-modulo input[type="checkbox"] { width: 1rem; height: 1rem; min-width: 1rem; margin-top: .25rem; padding: 0; accent-color: var(--accent); flex: 0 0 1rem; }
+.seletor-escritorios-modulo span { min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 650px) { .seletor-escritorios-grupos { grid-template-columns: 1fr; } }

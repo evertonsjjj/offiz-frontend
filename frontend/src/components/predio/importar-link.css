@@ -1,0 +1,19 @@
+.importar-link { margin-top: 12px; }
+.importar-link__painel { max-width: 760px; margin-top: 12px; padding: 16px; border: 1px solid var(--borda); border-radius: var(--raio-m); background: var(--bg-1); }
+.importar-link__painel header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.importar-link__painel header h3 { margin: 0; }
+.importar-link__painel header button { min-width: 44px; min-height: 44px; flex: none; }
+.importar-link__painel p { max-width: 68ch; overflow-wrap: anywhere; }
+.importar-link__painel form { display: grid; gap: 12px; }
+.importar-link__painel form > label:first-child { display: grid; gap: 6px; }
+.importar-link__painel input[type='url'] { min-width: 0; width: 100%; }
+.importar-link__limites { font-size: .86rem; margin: 0; }
+.importar-link__painel form > button { justify-self: start; }
+.importar-link__resultado ol { padding-inline-start: 24px; }
+.importar-link__resultado li { padding-block: 5px; overflow-wrap: anywhere; }
+.importar-link__resultado li strong, .importar-link__resultado li span { display: block; }
+.importar-link__resultado li span { font-size: .86rem; color: var(--text-2); }
+@media (max-width: 600px) {
+  .importar-link > button, .importar-link__painel button { min-height: 44px; }
+  .importar-link__painel { padding: 12px; }
+}

@@ -1,0 +1,66 @@
+/* ── Calendário editorial "Da pauta à publicação" ──────────────────────────
+   09/09/2026 — esta folha nasceu (07/09) com 10 hexes crus de uma paleta que
+   não é mais a do produto (creme #ece8df, verde #dce9dc, bege #f1e5c9, azul
+   #e3e7f0, telha #a3392b) e sem bloco de tema escuro: no escuro os chips de
+   estado brilhavam claros sobre painel preto e o texto de erro dava 2,6:1 —
+   ilegível justo na frase "não consegui aprovar". Agora tudo vem de
+   styles/tokens.css, que já tem as duas variantes. A regra da casa continua
+   valendo: nenhum hue fora da tabela.
+
+   E os campos voltaram para o CSS global. A linha que os estilizava aqui
+   vencia por especificidade três regras de app.css de uma vez — inclusive a
+   rede anti-zoom `@media (pointer: coarse) { input { font-size: max(16px,1em) } }`,
+   que existe para o iPhone não ampliar a página a cada toque, e o anel de foco
+   em --predio-acento, que é por onde a cor do cliente entra. */
+.editorial { color: inherit; padding: 1.5rem 0; container-type:inline-size; }
+@media(min-width:901px) {
+  .mesa--editorial.mesa--peca-aberta { grid-template-columns:0 minmax(260px,1fr) minmax(320px,66%); }
+  .mesa--editorial .mesa-nav { display:none; }
+  .mesa--editorial .mesa-chat { grid-column:2; }
+  .mesa--editorial .mesa-peca { grid-column:3; }
+}
+.editorial__cabecalho { display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-bottom:1.4rem; }
+.editorial__cabecalho h3 { margin:.3rem 0; font-size:1.5rem; letter-spacing:-.025em; }
+.editorial__cabecalho p, .editorial__nota, .editorial__vazio { opacity:.7; font-size:.9rem; line-height:1.6; }
+.editorial__sobretitulo { font-size:.65rem; letter-spacing:.16em; font-weight:600; opacity:.65; }
+.editorial__filtros { display:flex; gap:.3rem; flex-wrap:wrap; margin:1rem 0; }
+.editorial__filtros button { border:1px solid transparent; background:transparent; color:inherit; border-radius:var(--raio-s); padding:.5rem .65rem; font:inherit; font-size:.8rem; cursor:pointer; }
+.editorial__filtros button[aria-pressed=true] { border-color:currentColor; font-weight:600; }
+.editorial__peca { border-top:1px solid var(--borda); }
+.editorial__peca:last-child { border-bottom:1px solid var(--borda); }
+.editorial__linha { width:100%; display:grid; grid-template-columns:4.5rem 1fr auto 1rem; gap:1rem; align-items:center; text-align:left; border:0; background:transparent; color:inherit; padding:1rem .25rem; cursor:pointer; font:inherit; }
+.editorial__linha:hover { background:var(--hover); }
+.editorial__data { font-size:.8rem; font-variant-numeric:tabular-nums; opacity:.7; }
+.editorial__titulo { display:grid; gap:.3rem; min-width:0; }
+.editorial__titulo strong { font-size:.95rem; font-weight:600; overflow-wrap:anywhere; }
+.editorial__titulo small { opacity:.65; font-size:.75rem; }
+.editorial__estado { font-size:.7rem; background:var(--bg-1); color:var(--text-1); padding:.3rem .55rem; border-radius:var(--raio-s); white-space:nowrap; }
+.editorial__estado--aprovado, .editorial__estado--publicado { background:var(--ok-suave); color:var(--ok-ink); }
+.editorial__estado--em_revisao { background:var(--aviso-suave); color:var(--aviso); }
+.editorial__estado--em_producao { background:var(--accent-suave); color:var(--accent-forte); }
+.editorial__detalhe { padding:.5rem .4rem 1.5rem; display:grid; gap:1rem; }
+.editorial__form { display:grid; gap:.9rem; padding:1.2rem; border:1px solid var(--borda); border-radius:var(--raio-m); }
+.editorial label { display:grid; gap:.4rem; font-size:.8rem; }
+.editorial input:not([type=checkbox]), .editorial textarea, .editorial select { min-width:0; }
+.editorial textarea { resize:vertical; line-height:1.6; }
+.editorial__duas-colunas, .editorial__resultado { display:grid; grid-template-columns:1fr 1fr; gap:1.2rem; }
+.editorial__resultado > div { min-width:0; }
+.editorial__resultado .resultado-entrega__img { max-height:480px; object-fit:contain; }
+.editorial__resultado iframe { width:100%; min-height:320px; }
+.editorial__acoes { display:flex; flex-wrap:wrap; gap:.8rem; align-items:center; }
+.editorial__check { display:flex !important; align-items:flex-start; line-height:1.5; }
+.editorial__check input[type=checkbox] { margin:.15rem .4rem 0 0; width:1rem; height:1rem; flex:0 0 1rem; padding:0; }
+.editorial__qualidade { padding:1rem; background:var(--aviso-suave); border:1px solid color-mix(in srgb, var(--aviso) 30%, transparent); border-radius:var(--raio-s); font-size:.85rem; }
+.editorial summary { cursor:pointer; font-size:.85rem; }
+.editorial__qualidade li { margin:.5rem 0; }
+.editorial__comparacao p, .editorial__briefing { white-space:pre-wrap; line-height:1.6; font-size:.9rem; }
+/* .editorial__legenda existia no TSX (ConteudoEditorial.tsx) sem uma linha
+   de CSS: a legenda da peça saía com o tamanho do corpo, sem hierarquia. */
+.editorial__legenda { font-size:.85rem; line-height:1.6; color:var(--text-2); margin:0; }
+.editorial__arquivos { list-style:none; padding:0; }
+.editorial__arquivos li { display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:.4rem 0; font-size:.8rem; }
+.editorial__erro { color:var(--erro); }
+.editorial button:disabled { opacity:.45; cursor:default; }
+.editorial button:focus-visible, .editorial summary:focus-visible { outline:2px solid currentColor; outline-offset:3px; }
+@container(max-width:550px) { .editorial__resultado,.editorial__duas-colunas { grid-template-columns:1fr; } }
+@media(max-width:640px) { .editorial__cabecalho { align-items:flex-start; flex-direction:column; } .editorial__duas-colunas,.editorial__resultado { grid-template-columns:1fr; } .editorial__linha { grid-template-columns:3.5rem 1fr 1rem; gap:.65rem; } .editorial__estado { grid-column:2; grid-row:2; width:fit-content; } .editorial__linha > span:last-child { grid-column:3; grid-row:1; } }

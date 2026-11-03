@@ -1,0 +1,311 @@
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { afterEach, expect, it, vi } from 'vitest'
+import { AdminContratos, MeuContrato } from './ContratosIA'
+import { api, ApiError } from '../lib/api'
+import { IdiomaProvider } from '../lib/i18n'
+import { AuthProvider } from '../context/AuthContext'
+import { ToastsProvider } from './Toasts'
+vi.mock('../lib/api', async importOriginal => ({ ...await importOriginal<typeof import('../lib/api')>(), api: { get: vi.fn(), put: vi.fn(), post: vi.fn() } }))
+afterEach(() => { cleanup(); vi.resetAllMocks(); localStorage.removeItem('offiz:idioma:visitante') })
+const contas = { configuradas: { openai: true, falai: false, elevenlabs: false }, usd_brl: 5.5, margem_custo_pct: 20, elevenlabs_usd_mil_caracteres: 0.3 }
+const contrato = { tipo: 'pf_gerenciado', mensalidade_brl: 100, limite_brl_mes: 100, servicos: ['openai'], periodo: '2026-09', consumido_brl: 8, reservado_brl: 2, disponivel_brl: 90, conexoes: { openai: true }, inicio: null, fim: null, vigencia: 'vigente' }
+
+const ferramentas = [{ provedor: 'falai', modelo: 'fal-ai/nano-banana-2/edit', operacao: 'imagens', chamadas: 6,
+      consumido_brl: 8, reservado_brl: 2, pendente_offiz_brl: 0, unidades: { imagens: 6 }, historico_sem_detalhe: false,
+      tarifas: [{ usd_unidade: 0.16, usd_brl: 5.5, margem_pct: 20 }] }]
+
+it('começa com saldo limpo, mantém detalhes acessíveis e atualiza o consumo real', async () => {
+  vi.mocked(api.get).mockResolvedValue({ ...contrato, credito_brl: 0, consumido_brl: 0, reservado_brl: 0, disponivel_brl: 100, ferramentas: [] })
+  render(<MeuContrato orgId={7} />)
+  await screen.findByText(/100,00 disponíveis/)
+  expect(screen.queryByText(/Crédito concedido:/)).not.toBeInTheDocument()
+  expect(screen.getByText(/Consumo:/)).not.toBeVisible()
+  expect(screen.queryByText('Consumo por ferramenta')).not.toBeInTheDocument()
+  expect(screen.queryByText(/Contrato vigente/)).not.toBeInTheDocument()
+  expect(screen.queryByText(/conectado/)).not.toBeInTheDocument()
+  expect(screen.queryByRole('table')).not.toBeInTheDocument()
+  fireEvent.click(screen.getByText('Ver consumo'))
+  expect(screen.getByText('Seu consumo aparecerá aqui conforme você usar o escritório.')).toBeVisible()
+  vi.mocked(api.get).mockResolvedValue({ ...contrato, disponivel_brl: 85, ferramentas })
+  fireEvent.click(screen.getByRole('button', { name: 'Atualizar saldo' }))
+  await screen.findByText(/85,00 disponíveis/)
+  expect(screen.queryByText(/100,00 disponíveis/)).not.toBeInTheDocument()
+  expect(screen.getByText('Ver consumo').closest('details')).toHaveAttribute('open')
+  expect(screen.getByText('fal.ai · Imagens')).toBeVisible()
+})
+
+it('admin configura vozes por cliente sem carregá-las no cliente seguinte', async () => {
+  vi.mocked(api.get).mockImplementation(async path => path === '/admin/contas-ia' ? contas : path.endsWith('/reservas-ia') ? [] : {
+    ...contrato, credito_brl: 10, ferramentas, servicos: ['openai', 'elevenlabs'], vozes_elevenlabs: path.includes('/7/') ? ['voz_pessoa'] : [],
+  })
+  vi.mocked(api.put).mockImplementation(async (_path, body) => ({ ...contrato, ...body as object }))
+  render(<AdminContratos orgs={[{ id: 7, nome: 'Pessoa', slug: 'pessoa', status: 'ativa' }, { id: 8, nome: 'Outra', slug: 'outra', status: 'ativa' }]} aoSalvar={() => {}} />)
+  fireEvent.change(screen.getByLabelText('Cliente'), { target: { value: '7' } })
+  const campo = await screen.findByLabelText('Vozes privadas deste cliente (ElevenLabs)')
+  expect(campo).toHaveValue('voz_pessoa')
+  expect(screen.getByText(/Crédito concedido:/)).toHaveTextContent('10,00')
+  expect(screen.getByRole('columnheader', { name: 'Consumo confirmado' })).toBeInTheDocument()
+  expect(screen.getByText('fal.ai · Imagens')).toBeInTheDocument()
+  fireEvent.click(screen.getByText('Como foi calculado'))
+  expect(screen.getByText('6 imagens solicitadas')).toBeVisible()
+  expect(screen.getByText(/0.160000 por unidade/)).toHaveTextContent('20%')
+  expect(screen.getByText(/ainda não é consumo confirmado/)).toBeInTheDocument()
+  fireEvent.change(campo, { target: { value: 'voz_pessoa, voz_nova' } })
+  fireEvent.click(screen.getByRole('button', { name: 'Salvar contrato' }))
+  await screen.findByText('Contrato salvo.')
+  expect(api.put).toHaveBeenLastCalledWith('/admin/orgs/7/contrato', expect.objectContaining({ vozes_elevenlabs: ['voz_pessoa', 'voz_nova'] }))
+  fireEvent.change(screen.getByLabelText('Cliente'), { target: { value: '8' } })
+  expect(await screen.findByLabelText('Vozes privadas deste cliente (ElevenLabs)')).toHaveValue('')
+})
+
+it('salva a chave uma vez e limpa o campo; formulário não recebe a chave cadastrada', async () => {
+  vi.mocked(api.get).mockResolvedValue(contas)
+  vi.mocked(api.put).mockResolvedValue(contas)
+  render(<AdminContratos orgs={[]} aoSalvar={() => {}} />)
+  const campo = await screen.findByLabelText(/OpenAI .* chave cadastrada/)
+  expect(campo).toHaveValue('')
+  fireEvent.change(campo, { target: { value: 'chave-sintetica' } })
+  fireEvent.click(screen.getByRole('button', { name: 'Salvar contas de IA' }))
+  await screen.findByText('Contas compartilhadas salvas.')
+  expect(api.put).toHaveBeenCalledWith('/admin/contas-ia', expect.objectContaining({ chaves: { openai: 'chave-sintetica' } }))
+  expect(campo).toHaveValue('')
+})
+
+it('altera mensalidade, saldo e serviços de forma independente sem Claude', async () => {
+  vi.mocked(api.get).mockImplementation(async path => path === '/admin/contas-ia' ? contas : path.endsWith('/reservas-ia') ? [] : contrato)
+  vi.mocked(api.put).mockResolvedValue(contrato)
+  render(<AdminContratos orgs={[{ id: 7, nome: 'Pessoa', slug: 'pessoa', status: 'ativa' }]} aoSalvar={() => {}} />)
+  fireEvent.change(screen.getByLabelText('Cliente'), { target: { value: '7' } })
+  const mensalidade = await screen.findByLabelText('Mensalidade do contrato (R$)')
+  fireEvent.change(mensalidade, { target: { value: '200' } })
+  fireEvent.change(screen.getByLabelText('Saldo mensal para IA (R$)'), { target: { value: '60' } })
+  fireEvent.click(screen.getByRole('checkbox', { name: /fal.ai/ }))
+  fireEvent.click(screen.getByRole('button', { name: 'Salvar contrato' }))
+  await waitFor(() => expect(api.put).toHaveBeenCalledWith('/admin/orgs/7/contrato', { tipo: 'pf_gerenciado', mensalidade_brl: 200, limite_brl_mes: 60, servicos: ['openai', 'falai'], inicio: null, fim: null }))
+  expect(screen.queryByText(/Claude/i)).not.toBeInTheDocument()
+})
+
+it('troca de cliente não aceita resposta tardia do saldo anterior', async () => {
+  let resolver!: (c: unknown) => void
+  vi.mocked(api.get).mockImplementation(path => path.includes('/1/') ? new Promise(r => { resolver = r }) : Promise.resolve({ ...contrato, disponivel_brl: 43 }))
+  const { rerender } = render(<MeuContrato orgId={1} />)
+  rerender(<MeuContrato orgId={2} />)
+  await screen.findByText(/43,00 disponíveis/)
+  await act(async () => { resolver(contrato) })
+  expect(screen.queryByText(/90,00 disponíveis/)).not.toBeInTheDocument()
+  expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
+})
+
+it('testa a chave salva e exige salvar uma substituição antes de testar', async () => {
+  vi.mocked(api.get).mockResolvedValue(contas)
+  vi.mocked(api.post).mockResolvedValue({ ok: true, mensagem: 'Consulta aceita, geração não testada.', testado_em: '2026-09-20T12:00:00Z', duracao_ms: 50 })
+  render(<AdminContratos orgs={[]} aoSalvar={() => {}} />)
+  const testar = await screen.findByRole('button', { name: 'Testar conexão OpenAI' })
+  expect(screen.getByRole('button', { name: 'Testar conexão fal.ai' })).toBeDisabled()
+  fireEvent.click(testar)
+  await screen.findByText(/Consulta aceita, geração não testada/)
+  expect(api.post).toHaveBeenCalledWith('/admin/contas-ia/openai/testar', {})
+  fireEvent.change(screen.getByLabelText(/OpenAI .* chave cadastrada/), { target: { value: 'nova-chave-sintetica' } })
+  expect(testar).toBeDisabled()
+  expect(screen.queryByText(/Consulta aceita/)).not.toBeInTheDocument()
+  expect(screen.getByText('Salve as alterações antes de testar esta conexão.')).toBeInTheDocument()
+})
+
+it('salva vigência e permite remover o término sem mudar o saldo', async () => {
+  vi.mocked(api.get).mockImplementation(async path => path === '/admin/contas-ia' ? contas : path.endsWith('/reservas-ia') ? [] : contrato)
+  vi.mocked(api.put).mockImplementation(async (_path, body) => ({ ...contrato, ...body as object }))
+  render(<AdminContratos orgs={[{ id: 7, nome: 'Pessoa', slug: 'pessoa', status: 'ativa' }]} aoSalvar={() => {}} />)
+  fireEvent.change(screen.getByLabelText('Cliente'), { target: { value: '7' } })
+  fireEvent.change(await screen.findByLabelText('Início do contrato'), { target: { value: '2026-09-20' } })
+  fireEvent.change(screen.getByLabelText('Término do contrato'), { target: { value: '2026-10-20' } })
+  fireEvent.click(screen.getByRole('button', { name: 'Salvar contrato' }))
+  await screen.findByText('Contrato salvo.')
+  expect(api.put).toHaveBeenLastCalledWith('/admin/orgs/7/contrato', expect.objectContaining({ inicio: '2026-09-20', fim: '2026-10-20', limite_brl_mes: 100 }))
+  fireEvent.change(screen.getByLabelText('Término do contrato'), { target: { value: '' } })
+  fireEvent.click(screen.getByRole('button', { name: 'Salvar contrato' }))
+  await waitFor(() => expect(api.put).toHaveBeenLastCalledWith('/admin/orgs/7/contrato', expect.objectContaining({ fim: null })))
+})
+
+it('conta própria não apresenta R$ zero como saldo real do fornecedor', async () => {
+  vi.mocked(api.get).mockResolvedValue({ ...contrato, tipo: 'byok', limite_brl_mes: 0, disponivel_brl: 0, consumido_brl: 0, reservado_brl: 0 })
+  render(<MeuContrato orgId={7} />)
+  expect(await screen.findByText('IA pela sua conta')).toBeVisible()
+  expect(screen.getByText(/O saldo dessa conta não é consultado pelo Offiz/)).toBeVisible()
+  expect(screen.getByText(/Contrato vigente/)).toBeVisible()
+  expect(screen.queryByText(/disponíveis/)).not.toBeInTheDocument()
+  expect(screen.queryByText('Ver consumo')).not.toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: 'Atualizar plano' }))
+  expect(await screen.findByText('IA pela sua conta')).toBeVisible()
+  expect(api.post).not.toHaveBeenCalled()
+})
+
+it('contrato lista serviço incluído e conexão sem prometer geração ou saldo no provedor', async () => {
+  vi.mocked(api.get).mockResolvedValue({ ...contrato, servicos: ['openai', 'falai'], conexoes: { openai: true, falai: false } })
+  render(<MeuContrato orgId={7} />)
+  fireEvent.click(await screen.findByText('Serviços do seu contrato'))
+  const lista = screen.getByText('Serviços do seu contrato').closest('details')!
+  expect(within(lista).getByText('Conexão cadastrada')).toBeVisible()
+  expect(within(lista).getByText('Aguardando configuração pelo Offiz')).toBeVisible()
+  expect(within(lista).getByText('Não incluído neste contrato')).toBeVisible()
+  expect(within(lista).getByText(/depende do saldo, da vigência/)).toBeVisible()
+})
+
+async function abrirAdmin(reservas: unknown[] = []) {
+  vi.mocked(api.get).mockImplementation(async path => path === '/admin/contas-ia' ? contas : path.endsWith('/reservas-ia') ? reservas : contrato)
+  render(<AdminContratos orgs={[{ id: 7, nome: 'Pessoa', slug: 'pessoa', status: 'ativa' }]} aoSalvar={vi.fn()} />)
+  fireEvent.change(screen.getByLabelText('Cliente'), { target: { value: '7' } })
+  await screen.findByRole('button', { name: 'Conceder crédito neste mês' })
+}
+
+it('crédito é revisado e pode ser cancelado sem enviar alteração financeira', async () => {
+  await abrirAdmin()
+  const prompt = vi.spyOn(window, 'prompt')
+  fireEvent.click(screen.getByRole('button', { name: 'Conceder crédito neste mês' }))
+  fireEvent.change(screen.getByLabelText('Valor do crédito (R$)'), { target: { value: '25,50' } })
+  fireEvent.change(screen.getByLabelText('Motivo do crédito'), { target: { value: 'Demonstração interna autorizada' } })
+  fireEvent.click(screen.getByRole('button', { name: 'Revisar crédito' }))
+  const revisao = screen.getByRole('region', { name: 'Crédito adicional' })
+  expect(within(revisao).getByText(/25,50/)).toBeVisible()
+  expect(api.post).not.toHaveBeenCalled()
+  fireEvent.click(within(revisao).getByRole('button', { name: 'Cancelar' }))
+  expect(screen.queryByRole('region', { name: 'Crédito adicional' })).not.toBeInTheDocument()
+  expect(api.post).not.toHaveBeenCalled()
+  expect(prompt).not.toHaveBeenCalled()
+})
+
+it('crédito inválido ou motivo insuficiente ficam no formulário', async () => {
+  await abrirAdmin()
+  fireEvent.click(screen.getByRole('button', { name: 'Conceder crédito neste mês' }))
+  fireEvent.change(screen.getByLabelText('Valor do crédito (R$)'), { target: { value: '0' } })
+  fireEvent.change(screen.getByLabelText('Motivo do crédito'), { target: { value: 'Demonstração interna' } })
+  fireEvent.click(screen.getByRole('button', { name: 'Revisar crédito' }))
+  expect(screen.getByRole('alert')).toHaveTextContent('crédito positivo')
+  fireEvent.change(screen.getByLabelText('Valor do crédito (R$)'), { target: { value: '25,50' } })
+  fireEvent.change(screen.getByLabelText('Motivo do crédito'), { target: { value: 'a' } })
+  fireEvent.click(screen.getByRole('button', { name: 'Revisar crédito' }))
+  expect(screen.getByRole('alert')).toHaveTextContent('5 a 500 caracteres')
+  expect(screen.queryByRole('button', { name: 'Confirmar crédito' })).not.toBeInTheDocument()
+  expect(api.post).not.toHaveBeenCalled()
+})
+
+it('confirmar crédito envia o valor revisado e conserva a identificação após falha', async () => {
+  await abrirAdmin()
+  vi.mocked(api.post).mockRejectedValueOnce(new ApiError(503, 'Confirmação indisponível')).mockResolvedValue(contrato)
+  fireEvent.click(screen.getByRole('button', { name: 'Conceder crédito neste mês' }))
+  fireEvent.change(screen.getByLabelText('Valor do crédito (R$)'), { target: { value: '25,50' } })
+  fireEvent.change(screen.getByLabelText('Motivo do crédito'), { target: { value: 'Demonstração interna autorizada' } })
+  fireEvent.click(screen.getByRole('button', { name: 'Revisar crédito' }))
+  expect(api.post).not.toHaveBeenCalled()
+  fireEvent.click(screen.getByRole('button', { name: 'Confirmar crédito' }))
+  const reenviar = await screen.findByRole('button', { name: 'Reenviar o mesmo crédito' })
+  expect(screen.queryByRole('button', { name: 'Corrigir valores' })).not.toBeInTheDocument()
+  expect(api.post).toHaveBeenCalledWith('/admin/orgs/7/creditos-ia', { id: expect.stringMatching(/^[a-f0-9]{32}$/), valor_brl: 25.5, motivo: 'Demonstração interna autorizada' })
+  const primeiro = vi.mocked(api.post).mock.calls[0][1]
+  fireEvent.click(reenviar)
+  expect(await screen.findByText(/Crédito de.*registrado/)).toBeVisible()
+  expect(api.post).toHaveBeenCalledTimes(2)
+  expect(vi.mocked(api.post).mock.calls[1][1]).toEqual(primeiro)
+})
+
+const reserva = { id: 'reserva-fixture', provedor: 'falai', modelo: 'modelo-fixture', periodo: '2026-09', reserva_brl: 2, custo_confirmado_brl: 1, criado_em: '2026-01-01T00:00:00Z', estado: 'reservado' }
+
+it('conferência de custo exige revisão e confirmação explícita do total e motivo', async () => {
+  await abrirAdmin([reserva])
+  vi.mocked(api.put).mockResolvedValue({ ok: true })
+  const prompt = vi.spyOn(window, 'prompt')
+  fireEvent.click(screen.getByText(/Chamadas em processamento ou conferência \(1\)/))
+  fireEvent.click(screen.getByRole('button', { name: 'Conferir custo' }))
+  expect(screen.getByLabelText('Custo total conferido (R$)')).toHaveValue('3')
+  fireEvent.change(screen.getByLabelText('Custo total conferido (R$)'), { target: { value: '3,50' } })
+  fireEvent.change(screen.getByLabelText('Motivo e referência da conferência'), { target: { value: 'Conferido no extrato do fornecedor' } })
+  fireEvent.click(screen.getByRole('button', { name: 'Revisar alteração' }))
+  expect(api.put).not.toHaveBeenCalled()
+  fireEvent.click(screen.getByRole('button', { name: 'Confirmar custo conferido' }))
+  await screen.findByText('Custo da chamada conferido.')
+  expect(api.put).toHaveBeenCalledExactlyOnceWith('/admin/orgs/7/reservas-ia/reserva-fixture', { custo_brl: 3.5, motivo: 'Conferido no extrato do fornecedor' })
+  expect(prompt).not.toHaveBeenCalled()
+})
+
+it('assumir pendência explica o efeito no saldo e só altera após confirmação', async () => {
+  await abrirAdmin([reserva])
+  vi.mocked(api.post).mockResolvedValue({ ok: true })
+  fireEvent.click(screen.getByText(/Chamadas em processamento ou conferência \(1\)/))
+  fireEvent.click(screen.getByRole('button', { name: 'Offiz assume a pendência' }))
+  expect(screen.getByText(/O saldo reservado do cliente será liberado/)).toBeVisible()
+  expect(screen.queryByLabelText('Custo total conferido (R$)')).not.toBeInTheDocument()
+  fireEvent.change(screen.getByLabelText('Motivo e referência da conferência'), { target: { value: 'Offiz assume o teste interno' } })
+  fireEvent.click(screen.getByRole('button', { name: 'Revisar alteração' }))
+  expect(api.post).not.toHaveBeenCalled()
+  fireEvent.click(screen.getByRole('button', { name: 'Confirmar responsabilidade do Offiz' }))
+  await screen.findByText('Pendência assumida pelo Offiz.')
+  expect(api.post).toHaveBeenCalledExactlyOnceWith('/admin/orgs/7/reservas-ia/reserva-fixture/assumir', { motivo: 'Offiz assume o teste interno' })
+})
+
+it('falha ao confirmar custo pede atualização antes de permitir o mesmo envio', async () => {
+  await abrirAdmin([reserva])
+  vi.mocked(api.put).mockRejectedValueOnce(new ApiError(503, 'Confirmação indisponível')).mockResolvedValue({ ok: true })
+  fireEvent.click(screen.getByText(/Chamadas em processamento ou conferência \(1\)/))
+  fireEvent.click(screen.getByRole('button', { name: 'Conferir custo' }))
+  fireEvent.change(screen.getByLabelText('Motivo e referência da conferência'), { target: { value: 'Conferido no extrato do fornecedor' } })
+  fireEvent.click(screen.getByRole('button', { name: 'Revisar alteração' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Confirmar custo conferido' }))
+  await screen.findByText('Confirmação indisponível')
+  expect(screen.getByRole('button', { name: 'Confirmar custo conferido' })).toBeDisabled()
+  expect(api.put).toHaveBeenCalledTimes(1)
+  fireEvent.click(screen.getByRole('button', { name: 'Atualizar chamadas' }))
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Confirmar custo conferido' })).toBeEnabled())
+  fireEvent.click(screen.getByRole('button', { name: 'Confirmar custo conferido' }))
+  await screen.findByText('Custo da chamada conferido.')
+  expect(vi.mocked(api.put).mock.calls[1]).toEqual(vi.mocked(api.put).mock.calls[0])
+})
+
+it('timestamp UTC com Z mantém bloqueada a conferência de uma chamada recente', async () => {
+  await abrirAdmin([{ ...reserva, criado_em: new Date(Date.now() - 60 * 60 * 1000).toISOString() }])
+  fireEvent.click(screen.getByText(/Chamadas em processamento ou conferência \(1\)/))
+  expect(screen.getByRole('button', { name: 'Conferir custo' })).toBeDisabled()
+})
+
+it('custo inicial soma valores do ledger sem casas espúrias de ponto flutuante', async () => {
+  await abrirAdmin([{ ...reserva, reserva_brl: 0.1, custo_confirmado_brl: 0.2 }])
+  fireEvent.click(screen.getByText(/Chamadas em processamento ou conferência \(1\)/))
+  fireEvent.click(screen.getByRole('button', { name: 'Conferir custo' }))
+  expect(screen.getByLabelText('Custo total conferido (R$)')).toHaveValue('0.3')
+  fireEvent.change(screen.getByLabelText('Motivo e referência da conferência'), { target: { value: 'Conferido no extrato do fornecedor' } })
+  fireEvent.click(screen.getByRole('button', { name: 'Revisar alteração' }))
+  expect(screen.getByRole('button', { name: 'Confirmar custo conferido' })).toBeVisible()
+  expect(api.put).not.toHaveBeenCalled()
+})
+
+it('plano de conta própria explica saldo e vigência em inglês', async () => {
+  localStorage.clear()
+  localStorage.setItem('offiz:idioma:visitante', 'en')
+  vi.mocked(api.get).mockResolvedValue({ ...contrato, tipo: 'byok', vigencia: 'encerrado', disponivel_brl: 0 })
+  render(<ToastsProvider><AuthProvider><IdiomaProvider><MeuContrato orgId={7} /></IdiomaProvider></AuthProvider></ToastsProvider>)
+  expect(await screen.findByText('AI with your own account')).toBeVisible()
+  expect(screen.getByRole('heading', { name: 'Your AI plan' })).toBeVisible()
+  expect(screen.getByText(/Offiz does not check this account’s balance/)).toBeVisible()
+  expect(screen.getByText('Plan ended')).toBeVisible()
+  expect(within(screen.getByRole('region', { name: 'My AI plan' })).getByRole('status')).toHaveTextContent('Customer access to the office is blocked.')
+  expect(screen.getByRole('button', { name: 'Refresh plan' })).toBeVisible()
+  expect(screen.queryByText(/IA pela sua conta/)).not.toBeInTheDocument()
+  expect(screen.queryByText(/available/)).not.toBeInTheDocument()
+})
+
+it('saldo, serviços e extrato de consumo do contrato estão em inglês', async () => {
+  localStorage.clear()
+  localStorage.setItem('offiz:idioma:visitante', 'en')
+  vi.mocked(api.get).mockResolvedValue({ ...contrato, ferramentas })
+  render(<ToastsProvider><AuthProvider><IdiomaProvider><MeuContrato orgId={7} /></IdiomaProvider></AuthProvider></ToastsProvider>)
+  expect(await screen.findByText(/90\.00 available/)).toBeVisible()
+  fireEvent.click(screen.getByText('Services in your plan'))
+  expect(screen.getByText('Connection saved')).toBeVisible()
+  expect(screen.getAllByText('Not included in this plan')).toHaveLength(2)
+  fireEvent.click(screen.getByText('View usage'))
+  expect(screen.getByText('Usage by tool')).toBeVisible()
+  expect(screen.getByRole('columnheader', { name: 'Confirmed usage' })).toBeVisible()
+  expect(screen.getByText('fal.ai · Images')).toBeVisible()
+  fireEvent.click(screen.getByText('How it was calculated'))
+  expect(screen.getByText('6 requested images')).toBeVisible()
+  expect(screen.getByText(/per requested unit/)).toHaveTextContent('Exchange rate:')
+  expect(screen.queryByText('Serviços do seu contrato')).not.toBeInTheDocument()
+})
