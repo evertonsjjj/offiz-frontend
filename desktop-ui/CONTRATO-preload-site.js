@@ -64,6 +64,8 @@ contextBridge.exposeInMainWorld('offizMotor', {
   desligar: () => ipcRenderer.invoke('motor-desligar'),
   recuperacoes: orgId => ipcRenderer.invoke('motor-recuperacoes',orgId),
   abrirRecuperacao: (orgId,id) => ipcRenderer.invoke('motor-recuperacao-abrir',orgId,id),
+  escolherPastaTrabalho: orgId => ipcRenderer.invoke('motor-pasta-escolher', orgId),
+  abrirPastaTrabalho: orgId => ipcRenderer.invoke('motor-pasta-abrir', orgId),
 
   // Login do Claude: conectar abre o OAuth no navegador padrão; aguardar
   // resolve quando o callback web conclui (e devolve motorTrocado/avisoModo).

@@ -132,6 +132,13 @@
 
   <!-- Motor -->
   <div class="cartao">
+    <h2>Pasta de trabalho neste computador</h2>
+    <p id="pastaInfo" class="aviso">Escolha uma pasta antes de ligar o motor.</p>
+    <div class="linha"><button id="btnPasta">Escolher pasta</button><button id="btnAbrirPasta">Abrir pasta dos trabalhos</button></div>
+    <p class="aviso">Esta pasta conserva insumos e resultados locais. O chat e as entregas sincronizadas continuam no serviço. Trocar a pasta não move as cópias anteriores.</p>
+    <p id="msgPasta" class="msg"></p>
+  </div>
+  <div class="cartao">
     <h2>5 · Motor</h2>
     <div class="linha">
       <div id="jobInfo" class="aviso">Motor parado.</div>
@@ -188,6 +195,11 @@
     }
 
     // motor
+    const pasta = estado.config.pastaTrabalho;
+    $('pastaInfo').textContent = pasta?.pasta || 'Escolha uma pasta antes de ligar o motor.';
+    $('btnPasta').disabled = !estado.pareado || w.estado !== 'parado' || Boolean(w.jobAtual);
+    $('btnAbrirPasta').disabled = !estado.pareado || !pasta?.disponivel;
+    $('btnLigar').disabled = !estado.pareado || !pasta?.disponivel;
     if (w.estado === 'parado') {
       pill($('pillMotor'), 'parado', 'neutro');
       $('jobInfo').textContent = 'Motor parado.';
@@ -437,7 +449,17 @@
       $('msgParear').className = 'msg erro';
     } finally { btn.disabled = false; }
   };
-  $('btnLigar').onclick = async () => { await window.offizMotor.ligar(); atualizar(); };
+  $('btnPasta').onclick = async () => {
+    $('btnPasta').disabled = true;
+    try { const r = await window.offizMotor.escolherPastaTrabalho(estado.config.orgId); $('msgPasta').textContent = r.error || ''; }
+    catch { $('msgPasta').textContent = 'Não foi possível escolher a pasta.'; }
+    await atualizar();
+  };
+  $('btnAbrirPasta').onclick = async () => {
+    try { const r = await window.offizMotor.abrirPastaTrabalho(estado.config.orgId); $('msgPasta').textContent = r.error || ''; }
+    catch { $('msgPasta').textContent = 'Não foi possível abrir a pasta.'; }
+  };
+  $('btnLigar').onclick = async () => { const r = await window.offizMotor.ligar(); $('msgPasta').textContent = r.error || ''; atualizar(); };
   $('btnDesligar').onclick = async () => { await window.offizMotor.desligar(); atualizar(); };
 
   // Instalador do Claude CLI com 1 clique (log ao vivo vindo do main process).

@@ -4,6 +4,13 @@ Código da interface web do Offiz: aplicativo, página pública, componentes,
 estilos, assets e testes. Inclui a tela de configuração do desktop e os contratos
 necessários para trabalhar na experiência de uso.
 
+Atualização de 03/11/2026: continuidade do histórico da conversa, medição de
+armazenamento por empresa e interface de pasta de trabalho do desktop. A pasta
+persistente exige Offiz Desktop 0.2.24 ou posterior. A interface conserva o fluxo
+dos aplicativos anteriores sem apresentar recursos que a ponte deles não oferece.
+
+Revisão de origem: `a00d40e8f7678afe887f4ba25eade4a3e84fb98d`.
+
 ## Demonstração local
 
 Requer **Node.js 22.12 ou superior** e npm. A validação desta distribuição usou
@@ -34,6 +41,7 @@ O exemplo visual Aurora é fictício.
 | `desktop-ui/` | Tela do motor e referência da ponte de IPC do desktop |
 | `standalone/vendor/` | Conversão de áudio compartilhada com o frontend |
 | `contratos/openapi.json` | Contrato HTTP público; exclui rotas internas e gerenciadas |
+| `contratos/armazenamento.md` | Semântica da medição, valores desconhecidos e residência parcial |
 
 Preserve `standalone/vendor/` ao lado de `frontend/`: há imports relativos usados
 no build. `desktop-ui/CONTRATO-preload-site.js` é uma referência de integração;
@@ -60,6 +68,10 @@ caminho em `BROWSER_EXECUTABLE` quando necessário. Os scripts avulsos
 do renderizador e da configuração Nginx da instalação completa; eles não fazem
 parte do build nem da demonstração deste repositório.
 
+`node scripts/armazenamento-interface.mjs` confere o build com API e ponte desktop
+simuladas, em telas de computador e celular. Ele não escolhe pastas reais, não
+conecta contas e não usa IA; exige o mesmo navegador dos testes de interface.
+
 ## Usar uma API real
 
 Use uma API de homologação isolada, fornecida pelo responsável pelo backend,
@@ -83,6 +95,12 @@ segredos nelas. A conta da API precisa das permissões corretas por empresa,
 escritório e usuário. Testar a assinatura pessoal exige o motor desktop pareado
 e autenticado; este frontend sozinho não executa a IA.
 
+O contrato inclui `GET /api/v1/orgs/{org_id}/armazenamento`. É necessário um backend
+compatível para obter a medição real; publicar estas fontes não atualiza a API
+hospedada. Resposta ausente ou medição incompleta não significa consumo zero.
+Configurar PostgreSQL/S3 externos ou escolher uma pasta local não comprova
+residência integral: há conteúdo e cópias centrais ainda sujeitos à migração.
+
 Os links de instalação são configuráveis no build com
 `VITE_APP_DOWNLOAD_BASE_WINDOWS`, `VITE_APP_DOWNLOAD_BASE_MAC_NATIVE` e
 `VITE_APP_INSTALL_URL`. Esses valores precisam apontar para arquivos existentes;
@@ -96,6 +114,6 @@ telas pequenas, teclado, carregamento, erros e estados vazios. Se uma mudança
 exigir outra resposta da API, descreva o contrato para implementação separada.
 
 `MANIFESTO-SHA256.json` registra os arquivos desta distribuição, excluindo o
-próprio manifesto. É uma referência do snapshot inicial, não dos arquivos que
+próprio manifesto. É uma referência do snapshot distribuído, não dos arquivos que
 forem alterados depois. Não inclua `node_modules`, `dist`, `.env`, logs ou dados
 nas alterações compartilhadas.

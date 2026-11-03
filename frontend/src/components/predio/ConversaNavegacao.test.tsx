@@ -17,6 +17,11 @@ function Endereco() {
     <button onClick={() => navegar('/app?org=1&conversa=42&pergunta=Quero%20entender%20minha%20marca')}>Pergunta por link</button></div>
 }
 const montar = (query = '?org=1&conversa=nova') => render(<MemoryRouter initialEntries={[`/app${query}`]}><Endereco /><ConversaTab orgId={1} slug="predio" office={office} nivelPredio /></MemoryRouter>)
+function HistoricoDaEmpresa() {
+  const { search } = useLocation()
+  const slug = new URLSearchParams(search).get('slug') || 'predio'
+  return <ConversaTab key={slug} orgId={1} slug={slug} office={slug === 'predio' ? office : { ...office, slug, nome: 'Conteúdo' }} nivelPredio={slug === 'predio'} />
+}
 const campo = () => screen.getByRole('textbox', { name: 'Seu pedido' })
 const escolher = (id: number) => fireEvent.click(within(screen.getByRole('complementary', { name: 'Suas conversas' })).getByRole('button', { name: new RegExp(`^Campanha ${id}`) }))
 beforeEach(() => {
@@ -24,6 +29,45 @@ beforeEach(() => {
   setTokens('sintetico', 'sintetico')
   vi.mocked(api.get).mockImplementation(async path => path.endsWith('/conversas') ? { conversas } : conversas.find(c => path === `/conversas/${c.id}`) || {})
   vi.mocked(api.post).mockResolvedValue({})
+})
+
+it.each(['clique', 'link'])('recupera conversa antiga de Conteúdo pelo histórico geral (%s), mantendo sua área', async origem => {
+  const antiga = { ...conversas[0], id: 41, office_slug: 'conteudo', office_nome: 'Conteúdo', titulo: 'Campanha antiga', atualizado_em: '2020-01-01T12:00:00Z', mensagens: [{ id: 41, role: 'assistant', conteudo: 'Mensagem antiga preservada' }] }
+  vi.mocked(api.get).mockImplementation(async path => {
+    if (path === '/orgs/1/predio/conversas') return { conversas: [conversas[1], antiga, { ...antiga, id: 99, organization_id: 2, titulo: 'Outra empresa' }] }
+    if (path === '/predios/1/conteudo/conversas') return { conversas: [antiga] }
+    if (path === '/conversas/41') return antiga
+    return {}
+  })
+  render(<MemoryRouter initialEntries={['/app?org=1&conversa=' + (origem === 'link' ? '41' : 'nova')]}><Endereco /><HistoricoDaEmpresa /></MemoryRouter>)
+  if (origem === 'clique') {
+    const historico = screen.getByRole('complementary', { name: 'Suas conversas' })
+    const botao = await within(historico).findByRole('button', { name: /^Campanha antiga/ })
+    expect(within(botao).getByText('Conteúdo')).toBeInTheDocument()
+    expect(screen.queryByText('Outra empresa')).not.toBeInTheDocument()
+    fireEvent.change(campo(), { target: { value: 'Rascunho geral ainda não enviado' } })
+    expect(vi.mocked(api.get).mock.calls.some(([p]) => p === '/conversas/41')).toBe(false)
+    fireEvent.click(botao)
+  }
+  expect(await screen.findByText('Mensagem antiga preservada')).toBeInTheDocument()
+  expect(screen.getByLabelText('Endereço atual')).toHaveTextContent('org=1&slug=conteudo&conversa=41&vista=conversa')
+  expect(api.get).toHaveBeenCalledWith('/predios/1/conteudo/conversas', expect.any(AbortSignal))
+  expect(campo()).toHaveValue('')
+  if (origem === 'clique') {
+    fireEvent.click(screen.getByRole('button', { name: 'Voltar navegador' }))
+    await waitFor(() => expect(campo()).toHaveValue('Rascunho geral ainda não enviado'))
+    expect(screen.queryByText('Mensagem antiga preservada')).not.toBeInTheDocument()
+  }
+  expect(api.post).not.toHaveBeenCalled()
+})
+
+it('uma conversa antiga fixada aparece no prédio sem trocar a área automaticamente', async () => {
+  vi.mocked(api.get).mockResolvedValue({ conversas: [{ ...conversas[0], office_slug: 'conteudo', office_nome: 'Conteúdo', fixada: true }] })
+  montar('?org=1')
+  expect(await screen.findByText('Campanha 42')).toBeInTheDocument()
+  expect(screen.getByText('Fixada')).toBeInTheDocument()
+  expect(screen.getByLabelText('Endereço atual')).not.toHaveTextContent('slug=conteudo')
+  expect(vi.mocked(api.get).mock.calls.some(([p]) => p === '/conversas/42')).toBe(false)
 })
 
 it('deep link abre somente o assunto da lista autorizada e preserva o destino de entrega', async () => {

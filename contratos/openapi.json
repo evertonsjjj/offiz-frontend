@@ -9132,6 +9132,7 @@
           "conversas"
         ],
         "summary": "Listar Conversas Predio",
+        "description": "Histórico privado da empresa, incluindo seus andares ainda autorizados.\n\nA lista não muda o contexto das conversas antigas: o front abre cada uma\nem seu andar e o detalhe continua exigindo a mesma permissão.",
         "operationId": "listar_conversas_predio_api_v1_orgs__org_id__predio_conversas_get",
         "security": [
           {
@@ -18472,6 +18473,52 @@
             }
           }
         },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/orgs/{org_id}/armazenamento": {
+      "get": {
+        "tags": [
+          "orgs"
+        ],
+        "summary": "Obter Armazenamento",
+        "description": "Ocupação real central; conexão externa não equivale a migração concluída.",
+        "operationId": "obter_armazenamento_api_v1_orgs__org_id__armazenamento_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "org_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Org Id"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Response",

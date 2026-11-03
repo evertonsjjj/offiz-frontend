@@ -2,6 +2,7 @@ import { useConfirmacao } from '../components/useConfirmacao'
 import { SecaoLgpd } from '../components/SecaoLgpd'
 import { MeuContrato } from '../components/ContratosIA'
 import { ConsumoIA } from '../components/ConsumoIA'
+import { ArmazenamentoOrg } from '../components/ArmazenamentoOrg'
 import { DownloadsMac } from '../components/DownloadsMac'
 import { DownloadsWindowsZIP } from '../components/DownloadsWindowsZIP'
 import { RecuperacaoLocal } from '../components/RecuperacaoLocal'
@@ -1595,21 +1596,17 @@ function SecaoDatabase({ orgId }: { orgId: number }) {
       {exigeBancoProprio ? (
         <>
           <p className="alerta alerta-aviso">
-            <strong>{t("Esta organização não usa o banco central do Offiz.", "This organization does not use Offiz’s central database.")}</strong> {t("O banco próprio não é opcional aqui: enquanto ele não estiver configurado e com a conexão testada, o escritório não executa tarefas.", "A dedicated database is required here. Tasks cannot run until it is configured and the connection has been tested.")}</p>
+            <strong>{t("Esta organização exige banco próprio para os recursos BYOD.", "This organization requires its own database for BYOD features.")}</strong> {t("O banco próprio não é opcional aqui: enquanto ele não estiver configurado e com a conexão testada, o escritório não executa tarefas.", "A dedicated database is required here. Tasks cannot run until it is configured and the connection has been tested.")}</p>
           <p className="texto-suave">
-            {t("Aponte o seu PostgreSQL abaixo. Com a conexão ", "Enter your PostgreSQL connection below. Once the connection is ")}<strong>{t("testada", "tested")}</strong>{t(", os documentos dos seus clientes e a ", ", your clients’ documents and the ")}<strong>{t("chave de IA", "AI key")}</strong> {t("passam a ser gravados", "will be stored")}{' '}
-            <strong>{t("no seu banco", "in your database")}</strong> {t("— nunca no armazenamento do Offiz (LGPD). A string de conexão fica criptografada e nunca é exibida.", "— never in Offiz storage (LGPD). The connection string is encrypted and never displayed.")}</p>
+            {t("Conecte e teste o PostgreSQL próprio para os documentos e entregas compatíveis com esta integração. A string de conexão fica criptografada e não é reexibida.", "Connect and test your PostgreSQL database for documents and deliverables supported by this integration. The connection string is encrypted and never displayed again.")}</p>
         </>
       ) : (
         <>
           <p className="texto-suave">
-            {t("Com o banco próprio configurado e testado, os ", "With your own database configured and tested, the ")}<strong>{t("arquivos dos documentos", "document files")}</strong> {t("e a ", "and ")}<strong>{t("chave de IA", "AI key")}</strong> {t("desta organização moram no seu banco.", "for this organization are stored in your database.")}</p>
-          <p className="texto-suave">
-            {t("Opcional: aponte um banco PostgreSQL próprio da organização. Com a conexão", "Optional: connect the organization’s own PostgreSQL database. Once the connection is")}{' '}
-            <strong>{t("testada", "tested")}</strong>{t(", os documentos dos seus clientes passam a ser gravados", ", your clients’ documents will be stored")}{' '}
-            <strong>{t("no seu banco", "in your database")}</strong> {t("— nunca no armazenamento do Offiz (LGPD). A string de conexão fica criptografada e nunca é exibida. Sem ele, tudo fica no armazenamento do Offiz, que é o padrão.", "— never in Offiz storage (LGPD). The connection string is encrypted and never displayed. Without it, Offiz storage is used by default.")}</p>
+            {t("Opcional: conecte e teste um PostgreSQL próprio para os documentos e entregas compatíveis com esta integração. Sem essa conexão, esses arquivos usam o serviço Offiz. A string de conexão fica criptografada e não é reexibida.", "Optional: connect and test your PostgreSQL database for documents and deliverables supported by this integration. Without this connection, these files use the Offiz service. The connection string is encrypted and never displayed again.")}</p>
         </>
       )}
+      <p className="texto-suave">{t('Essas conexões não transferem toda a empresa: chat, casos, cânon, memória e workspaces continuam no serviço. O histórico exige migração e conferência. Veja as pendências em Armazenamento da empresa.', 'These connections do not transfer the entire company: chat, cases, canon, memory and workspaces remain in the service. Existing data requires migration and verification. See pending items in Company storage.')}</p>
       {erro && <p className="alerta alerta-erro">{erro}</p>}
       {status && (
         <>
@@ -1854,7 +1851,7 @@ function BlocoMigracao({ orgId }: { orgId: number }) {
       }
       await carregar()
       if (movidosTotal) sucesso(t(`${movidosTotal} arquivo(s) agora vivem na infraestrutura da organização.`, `${movidosTotal} file(s) are now stored in the organization’s infrastructure.`))
-      else if (!falhas.length) sucesso(t("Nada a migrar — tudo já está no lugar.", "Nothing to migrate — everything is already in place."))
+      else if (!falhas.length) sucesso(t("Nenhum arquivo elegível foi movido nesta migração. Isso não confirma residência integral fora do Offiz.", "No eligible files were moved in this migration. This does not confirm complete data residency outside Offiz."))
     } catch (e) {
       if (e instanceof ApiError && e.status === 403) {
         setPodeDisparar(false)
@@ -1884,7 +1881,7 @@ function BlocoMigracao({ orgId }: { orgId: number }) {
           {t("Configure o banco (e o storage, se quiser) e clique em ", "Configure your database (and storage, if needed), then click ")}<strong>{t("Testar", "Test")}</strong> {t("antes de migrar — sem o teste, o Offiz continua gravando no armazenamento dele.", "before migrating. Without a successful test, Offiz continues using its own storage.")}</p>
       ) : nada ? (
         <p className="texto-suave">
-          {t("Nada a migrar: nenhum arquivo desta organização está no disco do Offiz.", "Nothing to migrate: this organization has no files on Offiz’s disk.")}{inv.linhas_sem_arquivo > 0 &&
+          {t("Nenhum arquivo elegível nesta migração. Isso não confirma residência integral fora do Offiz.", "No eligible files in this migration. This does not confirm complete data residency outside Offiz.")}{inv.linhas_sem_arquivo > 0 &&
             t(` (${inv.linhas_sem_arquivo} registro(s) apontam para arquivo que já não existe.)`, ` (${inv.linhas_sem_arquivo} record(s) point to files that no longer exist.)`)}
         </p>
       ) : (
@@ -2047,6 +2044,8 @@ function PainelMotorDaSessao({
   const [erroMotor, setErroMotor] = useState<string | null>(null)
   const [verificandoMotor, setVerificandoMotor] = useState(false)
   const [acaoWorker, setAcaoWorker] = useState<'ligar' | 'desligar' | null>(null)
+  const [acaoPasta, setAcaoPasta] = useState<'escolher' | 'abrir' | null>(null)
+  const [erroPasta, setErroPasta] = useState<string | null>(null)
   const alterandoWorker = acaoWorker !== null
   const [claude, setClaude] = useState<ClaudeStatus | null>(null)
   const [codex, setCodex] = useState<{ installed: boolean; authenticated?: boolean; versao?: string; error?: string } | null | 'sem-ponte'>(null)
@@ -2469,7 +2468,10 @@ function PainelMotorDaSessao({
         }
       }
       const resultado = await bridge.ligar()
-      if (!resultado.ok) throw new Error('Motor não iniciado')
+      if (!resultado.ok) {
+        falha(resultado.error || t('Não foi possível ligar o motor.', 'Could not start the engine.'))
+        return
+      }
       await atualizarMotor()
     } catch {
       falha(t("Não foi possível ligar o motor.", "Could not start the engine."))
@@ -2488,6 +2490,21 @@ function PainelMotorDaSessao({
     } finally { setAcaoWorker(null) }
   }
 
+  async function pastaTrabalho(acao: 'escolher' | 'abrir') {
+    if (!bridge || acaoPasta || getSessionIdentity() !== sessao) return
+    const executar = acao === 'escolher' ? bridge.escolherPastaTrabalho : bridge.abrirPastaTrabalho
+    if (!executar) return
+    setAcaoPasta(acao); setErroPasta(null)
+    try {
+      const resposta = await executar(orgId)
+      if (!vivoRef.current || getSessionIdentity() !== sessao) return
+      if (!resposta.ok && !('cancelado' in resposta && resposta.cancelado)) throw new Error(resposta.error || t('Não foi possível acessar a pasta.', 'Could not access the folder.'))
+      await atualizarMotor()
+    } catch (error) {
+      if (vivoRef.current && getSessionIdentity() === sessao) setErroPasta(error instanceof Error ? error.message : t('Não foi possível acessar a pasta.', 'Could not access the folder.'))
+    } finally { if (vivoRef.current && getSessionIdentity() === sessao) setAcaoPasta(null) }
+  }
+
   if (!bridge) return null
 
   const pareadoAqui = Boolean(motor?.pareado && motor.config.orgId === orgId)
@@ -2499,6 +2516,8 @@ function PainelMotorDaSessao({
   const logMotor = worker?.log ? worker.log.slice(-LINHAS_LOG_MOTOR) : []
   const logAoVivo = logInstalacao.length > 0 && logDe !== null
   const claudeConectado = claude?.installed && !claude.error && claude.loggedIn === true && claude.tokenExpired !== true
+  const pasta = pareadoAqui ? motor?.config.pastaTrabalho : undefined
+  const precisaPasta = Boolean(bridge.escolherPastaTrabalho) && (!pasta?.pasta || !pasta.disponivel)
 
   return <>{dialogo}{(
     <div className="motor-emb" id="motor-local">
@@ -2688,6 +2707,20 @@ function PainelMotorDaSessao({
         )}
       </details>
 
+      {bridge.escolherPastaTrabalho ? <section className="motor-emb-passo" aria-label={t('Pasta de trabalho neste computador', 'Work folder on this computer')}>
+        <h3>{t('Pasta de trabalho neste computador', 'Work folder on this computer')}</h3>
+        <p>{t('Escolha onde guardar os insumos e resultados dos trabalhos executados aqui. A escolha fica salva para esta conta e empresa neste computador.', 'Choose where to keep inputs and results for work performed here. Your choice is saved for this account and company on this computer.')}</p>
+        <p className="texto-suave">{t('O chat e as entregas sincronizadas continuam no serviço. Esta pasta não transfere todo o armazenamento para o computador. Ao trocar de pasta, as cópias anteriores permanecem onde estavam.', 'Chat and synced deliverables remain in the service. This folder does not move all storage to your computer. When you change folders, earlier copies stay in their original location.')}</p>
+        {pasta?.pasta && <p style={{ overflowWrap: 'anywhere' }}><strong>{t('Pasta selecionada:', 'Selected folder:')}</strong> {pasta.pasta}</p>}
+        {pareadoAqui && precisaPasta && <p role="status">{pasta?.erro || t('Selecione uma pasta disponível antes de ligar o motor.', 'Select an available folder before starting the engine.')}</p>}
+        {erroPasta && <p className="alerta alerta-erro" role="alert">{erroPasta}</p>}
+        <div className="motor-emb-acoes">
+          <button type="button" className="botao botao-fantasma" onClick={() => void pastaTrabalho('escolher')} disabled={!pareadoAqui || Boolean(acaoPasta) || alterandoWorker || worker?.estado !== 'parado' || Boolean(worker?.jobAtual)}>{acaoPasta === 'escolher' ? t('Escolhendo…', 'Choosing…') : pasta?.pasta ? t('Trocar pasta', 'Change folder') : t('Escolher pasta', 'Choose folder')}</button>
+          {pasta?.pasta && bridge.abrirPastaTrabalho && <button type="button" className="botao botao-fantasma" onClick={() => void pastaTrabalho('abrir')} disabled={Boolean(acaoPasta) || !pasta.disponivel}>{t('Abrir pasta dos trabalhos', 'Open work folder')}</button>}
+        </div>
+        {pareadoAqui && (worker?.estado !== 'parado' || worker?.jobAtual) && <p className="texto-suave">{t('Desligue o motor e aguarde os trabalhos terminarem para trocar a pasta.', 'Stop the engine and wait for work to finish before changing the folder.')}</p>}
+      </section> : <p className="texto-suave">{t('A escolha de uma pasta persistente requer o Offiz 0.2.24 ou posterior. Este app mantém o comportamento anterior. Termine os trabalhos e desligue o motor antes de atualizar.', 'Selecting a persistent folder requires Offiz 0.2.24 or later. This app keeps its earlier behavior. Finish work and stop the engine before updating.')}</p>}
+
       {/* Passo 4 — Motor */}
       <div className="motor-emb-passo">
         <div className="motor-emb-passo-titulo">
@@ -2725,7 +2758,7 @@ function PainelMotorDaSessao({
               type="button"
               className="botao botao-primario botao-pequeno"
               onClick={ligar}
-              disabled={!pareadoAqui || Boolean(erroMotor) || verificandoMotor || alterandoWorker}
+              disabled={!pareadoAqui || Boolean(erroMotor) || verificandoMotor || alterandoWorker || precisaPasta || Boolean(acaoPasta)}
               title={pareadoAqui ? undefined : t("Conecte esta empresa para ligar a IA", "Connect this company to turn on AI")}
             >
               {acaoWorker === 'ligar' ? t('Ligando…', 'Starting…') : t("Ligar o motor", "Start engine")}</button>
@@ -4629,6 +4662,7 @@ function ConfigOrgConteudo({
       </div>
       <div id="config-categoria-empresa" className="config-grid" hidden={categoria !== 'empresa'}>{visitadas.includes('empresa') && <><SecaoMembros orgId={orgId} /><SecaoPersonalizacao orgId={orgId} /></>}</div>
       <div id="config-categoria-dados" className="config-grid" hidden={categoria !== 'dados'}>{visitadas.includes('dados') && <>
+        <ArmazenamentoOrg orgId={orgId} />
         {contratoGerenciado === true ? <section className="cartao"><h2 className="secao-titulo">{t('Dados cuidados pelo Offiz', 'Data managed by Offiz')}</h2><p>{t('Seu plano inclui o armazenamento dos arquivos e o banco de dados administrados pelo Offiz. Você não precisa contratar ou configurar esses serviços.', 'Your plan includes file storage and a database managed by Offiz. You do not need to subscribe to or configure these services.')}</p></section> : contratoGerenciado === false ? <SecaoDatabase orgId={orgId} /> : aguardandoPlano}
         {temJuris && <><SecaoTribunais orgId={orgId} /><SecaoMcpKeys orgId={orgId} /></>}
       </>}</div>

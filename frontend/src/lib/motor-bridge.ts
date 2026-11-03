@@ -19,6 +19,7 @@ export interface MotorConfig {
   claudeModel?: string
   codexModel?: string
   workerEnabled?: boolean
+  pastaTrabalho?: { pasta: string | null; disponivel: boolean; erro?: string }
 }
 
 /** Job em execução no worker local (shape tolerante — vem do app). */
@@ -130,10 +131,12 @@ export interface OffizMotorBridge {
   claudeStatus(force?: boolean): Promise<ClaudeStatus>
   parear(orgId: number): Promise<ParearResultado>
   desparear(): Promise<DespararResultado>
-  ligar(): Promise<{ ok: boolean }>
+  ligar(): Promise<{ ok: boolean; error?: string }>
   desligar(): Promise<{ ok: boolean }>
   recuperacoes?(orgId: number): Promise<{id: string;jobId: number;office: string;date: string}[]>
   abrirRecuperacao?(orgId: number, id: string): Promise<{ok: boolean}>
+  escolherPastaTrabalho?(orgId: number): Promise<{ ok: boolean; cancelado?: boolean; pasta?: string; disponivel?: boolean; error?: string }>
+  abrirPastaTrabalho?(orgId: number): Promise<{ ok: boolean; error?: string }>
   /** Abre o OAuth do Claude no navegador padrão. */
   conectarClaude(): Promise<{ ok: boolean; error?: string }>
   /** Resolve quando o login no navegador termina (ou é cancelado). */

@@ -1,5 +1,5 @@
 OFFIZ — FRONTEND
-Fontes do frontend do Offiz — edição de 02/11/2026.
+Fontes do frontend do Offiz — edição de 03/11/2026.
 
 O pacote contém o frontend React/TypeScript completo: aplicativo, UX, telas
 administrativas, página pública, estilos, componentes, assets e testes existentes.
@@ -55,6 +55,11 @@ frontend/src/components/DownloadsMac.tsx e DownloadsWindowsZIP.tsx: opções de
 download. A base de Mac nativo só deve ser configurada com ZIPs e guias reais
 hospedados; os pacotes de preparação continuam identificados separadamente.
 frontend/src/pages/ConfigOrg.tsx: plano, consumo, conexões e configurações.
+frontend/src/components/ArmazenamentoOrg.tsx: medição por empresa, cota decimal,
+falhas de medição e pendências de residência. Valores desconhecidos não são zero.
+ConfigOrg também integra a pasta persistente do Desktop 0.2.24 ou posterior,
+com seleção nativa e isolamento por servidor, empresa e pessoa. O navegador
+sozinho não acessa pastas locais, e versões antigas conservam seu fluxo anterior.
 frontend/src/styles e CSS ao lado dos componentes: aparência e responsividade.
 frontend/src/lib/api.ts, types.ts, motor-bridge.ts: contratos e transporte.
 desktop-ui/motor.html: tela nativa de configuração; não edite nomes IPC ou
@@ -65,6 +70,9 @@ FRONTEIRA COM O BACKEND
 contratos/openapi.json contém o contrato HTTP público da API local desta versão.
 Nenhuma senha, token, chave de IA, banco de dados ou acervo de cliente foi incluído.
 As rotas /internal e /managed não integram o contrato entregue ao frontend.
+O novo GET /api/v1/orgs/{org_id}/armazenamento exige backend compatível; publicar
+fontes não atualiza o servidor. Veja contratos/armazenamento.md. Conexões externas
+testadas e pasta local não são prova de migração integral fora do VPS.
 Preserve autenticação, escopo por empresa/escritório/usuário e os identificadores
 de conversa, pedido e entrega. Não armazene segredos nem regras de cobrança
 somente no cliente. Mudança de contrato deve ser descrita para o responsável

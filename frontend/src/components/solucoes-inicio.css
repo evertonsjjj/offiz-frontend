@@ -48,6 +48,7 @@ button.inicio-conexao-status { cursor: pointer; }
 .conversa-busca input:focus { outline: none; box-shadow: none; }
 .conversa-busca > svg { flex-shrink: 0; }
 .conversa-fixada { color: var(--text-1); font-weight: 600; }
+.conversa-item-origem { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .conversa-sinal { display: inline-flex; align-items: center; gap: 5px; color: var(--text-1); }
 .conversa-sinal::before { content: ''; flex: 0 0 5px; height: 5px; border-radius: 50%; background: var(--text-2); }
 .conversa-sinal--trabalhando::before { background: var(--accent); }
@@ -192,7 +193,8 @@ button.inicio-conexao-status { cursor: pointer; }
   .offiz-inicio .conversa-lista > .botao { width: auto; }
   .offiz-inicio .conversa-lista-vazia { margin: 0; }
   .offiz-inicio .conversa-itens { display: flex; flex-direction: row; gap: 10px; overflow-x: auto; margin: 0; padding: 0; }
-  .offiz-inicio .conversa-item-linha { flex: 0 0 180px; }
+  /* Reservar largura para título, origem e estado mantém o histórico compacto. */
+  .offiz-inicio .conversa-item-linha { flex: 0 0 min(240px, 100%); min-width: 0; }
   .offiz-inicio .conversa-item-meta { display: none; }
   .inicio-topo { padding: 13px 22px; }
 }
@@ -375,7 +377,7 @@ button.inicio-conexao-status { cursor: pointer; }
   .offiz-inicio .conversa-itens,
   .offiz-inicio .conversa-lista-vazia,
   .offiz-inicio .conversa-lista > .alerta { grid-column: 1 / -1; }
-  .offiz-inicio .conversa-item-meta { display: flex; font-size: 11px; }
+  .offiz-inicio .conversa-item-meta { display: flex; min-width: 0; max-width: 100%; font-size: 11px; }
   .offiz-inicio .conversa-item-meta > .conversa-atualizada { display: none; }
 }
 /* A entrega ainda cabe em três colunas nessa janela. Manter o histórico

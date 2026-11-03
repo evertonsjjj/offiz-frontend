@@ -481,6 +481,8 @@ export interface ConversaResumo {
   id: number
   organization_id?: number
   office_slug?: string | null
+  /** Área original no histórico geral da empresa; null identifica o prédio. */
+  office_nome?: string | null
   titulo: string
   fixada?: boolean
   sinal?: 'trabalhando' | 'precisa_de_voce' | 'entregue' | null

@@ -9,7 +9,7 @@
     "build": "tsc --noEmit -p tsconfig.json && vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:interface": "npm run build && node scripts/studio-interface.mjs && node scripts/admin-interface.mjs && node scripts/deliveries-interface.mjs && node scripts/confirmation-interface.mjs && node scripts/recovery-interface.mjs && node scripts/production-interface.mjs && node scripts/acervo-selector-interface.mjs && node scripts/conversa-layout-interface.mjs",
+    "test:interface": "npm run build && node scripts/studio-interface.mjs && node scripts/admin-interface.mjs && node scripts/deliveries-interface.mjs && node scripts/confirmation-interface.mjs && node scripts/recovery-interface.mjs && node scripts/production-interface.mjs && node scripts/acervo-selector-interface.mjs && node scripts/conversa-layout-interface.mjs && node scripts/armazenamento-interface.mjs",
     "test:interface:acervo": "npm run build && node scripts/acervo-selector-interface.mjs",
     "test:interface:conversa": "npm run build && node scripts/conversa-layout-interface.mjs",
     "lint": "eslint src"

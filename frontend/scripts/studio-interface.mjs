@@ -26,6 +26,9 @@ try {
   const office = { slug: 'conteudo', nome: 'Conteúdo e marca', descricao: '', tema: { cor_primaria: '#0066cc', cor_acento: '#0066cc', cor_fundo: '#fff', icone: 'conversa' } }
   const conversation = { id: 17, organization_id: 3, office_slug: null, sinal: 'precisa_de_voce', resumo: 'Esperando o seu OK', titulo: 'Campanha de segunda', atualizado_em: now, total_mensagens: 1, mensagens: [{ id: 20, role: 'assistant', conteudo: 'Preparei o plano da apresentação. Você pode conferir as cenas e o custo no Estúdio.', criado_em: now }], anexos: [] }
   const areaConversation = { ...conversation, id: 18, office_slug: 'conteudo', titulo: 'Fotos para a campanha', mensagens: [{ id: 21, role: 'assistant', conteudo: 'Esta conversa pertence à área de Conteúdo e marca.', criado_em: now }], anexos: [{ nome: 'conteudo-qa-original.png', nome_exibicao: 'original.png', origem_exibicao: 'conteudo / ensaio' }] }
+  const longOfficeName = 'Assessoria jurídica empresarial e planejamento de comunicação institucional'
+  const longOfficeConversation = { ...areaConversation, id: 19, titulo: 'Planejamento semanal', office_nome: longOfficeName, resumo: 'Aguardando revisão' }
+  let showLongOffice = false
   const delivered = { id: 61, titulo: 'Campanha aprovada de interface', office_slug: 'conteudo', projeto_id: null, projeto_nome: null, referencia_job_id: null, favorito: false, aprovado: true, criado_em: now, estado: 'aprovado', status: 'done', desatualizados: [], arquivos: [] }
   const conversationsFetched = []
   const messagePosts = [], jobCreations = [], libraryQueries = [], attachmentDeletes = [], attachmentUploads = []
@@ -72,7 +75,7 @@ try {
     else if (endpoint === '/orgs/3/contrato' && request.method() === 'GET') body = { tipo: directFlow ? 'pf_gerenciado' : 'byok', vigencia: 'vigente', inicio: null, fim: null, periodo: now.slice(0, 7), servicos: ['openai'], conexoes: { openai: true }, mensalidade_brl: 120, limite_brl_mes: 120, consumido_brl: 25, reservado_brl: 8.4, disponivel_brl: 86.6 }
     else if (endpoint === '/orgs/3/inicio') body = { org_id: 3, org_nome: 'Aferia · teste de interface', org_status: 'ativa', meu_papel: 'owner', contrato_gerenciado: directFlow, motor_modo: 'api', tem_chave: true, andares: [{ slug: 'conteudo', nome: office.nome, descricao: '' }], solucoes: [], outras_solucoes: [], sabatina: { estado: 'contextualizado', pergunta: 'O que vamos preparar?', opcoes: [], permite_livre: true } }
     else if (endpoint === '/predios/3/conteudo') body = { org_id: 3, office_slug: 'conteudo', office, meu_papel: 'owner' }
-    else if (endpoint === '/orgs/3/predio/conversas') body = { conversas: [directConversation || conversation] }
+    else if (endpoint === '/orgs/3/predio/conversas') body = { conversas: [directConversation || conversation, ...(showLongOffice ? [longOfficeConversation] : [])] }
     else if (endpoint === '/predios/3/conteudo/conversas') body = { conversas: [areaConversation] }
     else if (endpoint === '/orgs/3/biblioteca') {
       libraryQueries.push(url.search)
@@ -164,7 +167,8 @@ try {
   await page.setViewportSize({ width: 390, height: 844 })
   const history = await page.locator('.conversa-lista').boundingBox()
   await page.screenshot({ path: path.join(out, 'offiz-plano-conversa-mobile.png'), fullPage: true })
-  assert(history && history.height <= 210, 'Histórico com busca deve ocupar uma faixa compacta no celular')
+  assert(history && history.height <= 210, `Histórico com busca deve ocupar uma faixa compacta no celular: ${JSON.stringify(history)}`)
+  assert(await page.getByText('Geral da empresa', { exact: true }).isVisible(), 'Origem da conversa precisa continuar visível no celular')
   assert(await page.getByText('Esperando o seu OK', { exact: true }).isVisible(), 'Estado do pedido precisa continuar visível no celular')
   assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'Overflow horizontal no celular')
   await page.setViewportSize({ width: 1440, height: 1000 })
@@ -406,6 +410,22 @@ try {
   assert.equal(messagePosts.length, 1)
   assert.deepEqual(jobCreations, [])
   await page.screenshot({ path: path.join(out, 'offiz-atalho-estado-limpo.png'), fullPage: true, animations: 'disabled' })
+  showLongOffice = true
+  await page.goto(`${origin}/app?org=3&conversa=17`)
+  const officeLabel = page.locator('.conversa-item-origem').filter({ hasText: longOfficeName })
+  await officeLabel.waitFor()
+  for (const width of [390, 320]) {
+    await page.setViewportSize({ width, height: 844 })
+    await officeLabel.scrollIntoViewIfNeeded()
+    await page.locator('.conversa-itens').evaluate(el => { el.scrollLeft = el.scrollWidth - el.clientWidth })
+    const compact = await page.locator('.conversa-lista').boundingBox()
+    assert(compact && compact.height <= 210, `Origem longa não expande o histórico: ${JSON.stringify(compact)}`)
+    assert.equal(await officeLabel.getAttribute('title'), longOfficeName, 'Tooltip conserva o nome completo da origem')
+    assert(await page.getByRole('button', { name: new RegExp(longOfficeName) }).isVisible(), 'Nome completo continua acessível')
+    assert(await officeLabel.evaluate(el => el.scrollWidth > el.clientWidth && getComputedStyle(el).textOverflow === 'ellipsis'), 'Origem longa usa reticências visuais')
+    assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'Origem longa não causa overflow horizontal')
+    await page.screenshot({ path: path.join(out, `offiz-historico-origem-longa-${width}.png`), fullPage: true, animations: 'disabled' })
+  }
   assert.deepEqual(errors, [])
   assert.deepEqual(unexpected, [])
   assert.equal(attachmentUploads.length, 2)

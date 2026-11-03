@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { beforeEach, expect, it, vi } from 'vitest'
+import { afterAll, beforeAll, beforeEach, expect, it, vi } from 'vitest'
 import { MemoryRouter } from 'react-router-dom'
 import { AuthProvider } from '../context/AuthContext'
 import { IdiomaProvider } from '../lib/i18n'
@@ -7,10 +7,23 @@ import { api, ApiError } from '../lib/api'
 import type { Usuario } from '../lib/types'
 import { ConfigOrgCorpo, SecaoMotorIA } from './ConfigOrg'
 
-vi.mock('../lib/api', async (original) => ({ ...await original<typeof import('../lib/api')>(), api: { get: vi.fn(), put: vi.fn() } }))
+vi.mock('../lib/api', async (original) => ({ ...await original<typeof import('../lib/api')>(), api: { get: vi.fn(), put: vi.fn(), post: vi.fn() } }))
 vi.mock('../lib/ws', () => ({ wsClient: { connect: vi.fn(), close: vi.fn(), on: vi.fn(() => vi.fn()) } }))
-vi.mock('../components/Toasts', () => ({ useToasts: () => ({ sucesso: vi.fn(), falha: vi.fn() }) }))
+const toasts = vi.hoisted(() => ({ sucesso: vi.fn(), falha: vi.fn() }))
+vi.mock('../components/Toasts', () => ({ useToasts: () => toasts }))
 let pessoa: Usuario
+const dialogPrototype = document.createElement('dialog').constructor.prototype
+const dialogMethods = Object.fromEntries(['showModal', 'close'].map(name => [name, Object.getOwnPropertyDescriptor(dialogPrototype, name)]))
+beforeAll(() => Object.defineProperties(dialogPrototype, {
+  showModal: { configurable: true, value: function (this: HTMLDialogElement) { this.setAttribute('open', '') } },
+  close: { configurable: true, value: function (this: HTMLDialogElement) { this.removeAttribute('open') } },
+}))
+afterAll(() => {
+  for (const [name, descriptor] of Object.entries(dialogMethods)) {
+    if (descriptor) Object.defineProperty(dialogPrototype, name, descriptor)
+    else delete dialogPrototype[name]
+  }
+})
 
 it('primeira conexão por API só muda o modo ao salvar e preserva os demais ajustes', async () => {
   vi.mocked(api.get).mockResolvedValue({
@@ -86,4 +99,51 @@ it('configurações reagem ao idioma sem remontar nem salvar o rascunho de chave
   expect(limite).toHaveValue(4567)
   expect(vi.mocked(api.get).mock.calls.filter(([path]) => path === '/orgs/1/settings/llm')).toHaveLength(chamadasLlm)
   await waitFor(() => expect(api.put).toHaveBeenCalledExactlyOnceWith('/usuarios/me/preferencias', { idioma_interface: 'pt-BR' }))
+})
+
+it.each([
+  ['pt-BR', true], ['pt-BR', false], ['en', true], ['en', false],
+] as const)('BYOD explica residência parcial em %s com banco central permitido=%s', async (idioma, central) => {
+  pessoa = { ...pessoa, idioma_interface: idioma }
+  localStorage.setItem('offiz_usuario', JSON.stringify(pessoa))
+  const anterior = vi.mocked(api.get).getMockImplementation()!
+  vi.mocked(api.get).mockImplementation(async (path, ...rest) => path === '/orgs/1/database'
+    ? { configurado: false, database_ok: false, pode_usar_banco_central: central, storage: { configurado: false } }
+    : anterior(path, ...rest))
+  render(<MemoryRouter><AuthProvider><IdiomaProvider><ConfigOrgCorpo orgId={1} /></IdiomaProvider></AuthProvider></MemoryRouter>)
+  fireEvent.click(await screen.findByRole('button', { name: idioma === 'en' ? 'Data and connections' : 'Dados e conexões' }))
+  await screen.findByRole('heading', { name: idioma === 'en' ? 'Database (BYOD)' : 'Banco de dados (BYOD)' })
+  expect(await screen.findByText(idioma === 'en' ? /chat, cases, canon, memory and workspaces remain in the service/ : /chat, casos, cânon, memória e workspaces continuam no serviço/)).toBeVisible()
+  if (!central) expect(await screen.findByText(idioma === 'en' ? /requires its own database for BYOD features/ : /exige banco próprio para os recursos BYOD/)).toBeVisible()
+  expect(screen.queryByText(/never in Offiz storage|nunca no armazenamento do Offiz/)).not.toBeInTheDocument()
+  expect(api.put).not.toHaveBeenCalled()
+})
+
+it.each([
+  ['pt-BR', 0], ['en', 0], ['pt-BR', 1], ['en', 1],
+] as const)('inventário ou lote vazio não atesta residência integral em %s (início=%s)', async (idioma, inicial) => {
+  pessoa = { ...pessoa, idioma_interface: idioma }
+  localStorage.setItem('offiz_usuario', JSON.stringify(pessoa))
+  let total = inicial as number
+  const anterior = vi.mocked(api.get).getMockImplementation()!
+  vi.mocked(api.get).mockImplementation(async (path, ...rest) => {
+    if (path === '/orgs/1/database') return { configurado: true, database_ok: true, pode_usar_banco_central: true, storage: { configurado: true } }
+    if (path === '/orgs/1/database/migracao') return { pronto: { byod: true, byos: true }, pode_migrar: { entregas: true }, por_categoria: { entregas: { arquivos: total, bytes: total * 20 } }, total_arquivos: total, total_bytes: total * 20, linhas_sem_arquivo: 0, fora_do_escopo: ['Workspaces'] }
+    return anterior(path, ...rest)
+  })
+  vi.mocked(api.post).mockImplementation(async () => { total = 0; return { movidos: 0, falhas: [], restante: 0 } })
+  render(<MemoryRouter><AuthProvider><IdiomaProvider><ConfigOrgCorpo orgId={1} /></IdiomaProvider></AuthProvider></MemoryRouter>)
+  fireEvent.click(await screen.findByRole('button', { name: idioma === 'en' ? 'Data and connections' : 'Dados e conexões' }))
+  if (inicial) {
+    fireEvent.click(await screen.findByRole('button', { name: idioma === 'en' ? 'Migrate to my infrastructure' : 'Migrar para a minha infraestrutura' }))
+    fireEvent.click(await screen.findByRole('button', { name: idioma === 'en' ? 'Move files' : 'Mover arquivos' }))
+    await waitFor(() => expect(toasts.sucesso).toHaveBeenCalledWith(idioma === 'en'
+      ? 'No eligible files were moved in this migration. This does not confirm complete data residency outside Offiz.'
+      : 'Nenhum arquivo elegível foi movido nesta migração. Isso não confirma residência integral fora do Offiz.'))
+    expect(api.post).toHaveBeenCalledExactlyOnceWith('/orgs/1/database/migracao')
+  } else expect(api.post).not.toHaveBeenCalled()
+  expect(await screen.findByText(idioma === 'en'
+    ? 'No eligible files in this migration. This does not confirm complete data residency outside Offiz.'
+    : 'Nenhum arquivo elegível nesta migração. Isso não confirma residência integral fora do Offiz.')).toBeVisible()
+  expect(screen.queryByText(/nenhum arquivo desta organização está no disco|this organization has no files on Offiz/)).not.toBeInTheDocument()
 })

@@ -21,6 +21,50 @@ beforeEach(() => {
 })
 afterEach(() => { cleanup(); vi.restoreAllMocks(); delete window.offizMotor; localStorage.clear(); sessionStorage.clear() })
 
+it('exige pasta disponível antes de ligar e conserva escolha após reler o motor', async () => {
+  const bridge = window.offizMotor!
+  const selected = { ...estado('parado'), config: { ...estado('parado').config, pastaTrabalho: { pasta: 'C:\\Trabalhos\\Offiz\\empresa-3', disponivel: true } } }
+  vi.mocked(bridge.estado).mockResolvedValue(estado('parado'))
+  bridge.escolherPastaTrabalho = vi.fn(async () => { vi.mocked(bridge.estado).mockResolvedValue(selected); return { ok: true } })
+  bridge.abrirPastaTrabalho = vi.fn().mockResolvedValue({ ok: true })
+  render(<PainelMotorEmbutido orgId={3} aoMudarPareamento={vi.fn()} />)
+  await screen.findByText('desligado')
+  expect(screen.getByRole('button', { name: 'Ligar o motor' })).toBeDisabled()
+  expect(screen.getByText(/O chat e as entregas sincronizadas continuam no serviço/)).toBeVisible()
+  fireEvent.click(screen.getByRole('button', { name: 'Escolher pasta' }))
+  await screen.findByText('C:\\Trabalhos\\Offiz\\empresa-3', { exact: false })
+  expect(bridge.escolherPastaTrabalho).toHaveBeenCalledWith(3)
+  expect(screen.getByRole('button', { name: 'Ligar o motor' })).toBeEnabled()
+  fireEvent.click(screen.getByRole('button', { name: 'Abrir pasta dos trabalhos' }))
+  await waitFor(() => expect(bridge.abrirPastaTrabalho).toHaveBeenCalledWith(3))
+  expect(bridge.ligar).not.toHaveBeenCalled()
+})
+
+it('cancelar seletor não inventa pasta nem liga o motor', async () => {
+  const bridge = window.offizMotor!
+  vi.mocked(bridge.estado).mockResolvedValue(estado('parado'))
+  bridge.escolherPastaTrabalho = vi.fn().mockResolvedValue({ ok: false, cancelado: true })
+  render(<PainelMotorEmbutido orgId={3} aoMudarPareamento={vi.fn()} />)
+  await screen.findByText('desligado')
+  fireEvent.click(screen.getByRole('button', { name: 'Escolher pasta' }))
+  await waitFor(() => expect(bridge.escolherPastaTrabalho).toHaveBeenCalledWith(3))
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Escolher pasta' })).toBeEnabled())
+  expect(screen.getByRole('button', { name: 'Ligar o motor' })).toBeDisabled()
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  expect(bridge.ligar).not.toHaveBeenCalled()
+})
+
+it('não troca pasta com tarefa em encerramento nem mostra caminho de outra empresa', async () => {
+  const bridge = window.offizMotor!
+  bridge.escolherPastaTrabalho = vi.fn()
+  vi.mocked(bridge.estado).mockResolvedValue({ ...comTarefa('parado'), config: { ...estado('parado', 4).config, pastaTrabalho: { pasta: 'C:\\OutraEmpresa', disponivel: true } } })
+  render(<PainelMotorEmbutido orgId={3} aoMudarPareamento={vi.fn()} />)
+  await screen.findByText(/Aguardando o encerramento da tarefa #358/)
+  expect(screen.getByRole('button', { name: 'Escolher pasta' })).toBeDisabled()
+  expect(screen.queryByText('C:\\OutraEmpresa')).not.toBeInTheDocument()
+  expect(bridge.escolherPastaTrabalho).not.toHaveBeenCalled()
+})
+
 it('push recente de motor desligado prevalece sobre uma verificação antiga ainda pendente', async () => {
   const antiga = adiado<MotorEstado>(), bridge = window.offizMotor!
   vi.mocked(bridge.estado).mockReturnValueOnce(antiga.promessa).mockResolvedValueOnce(estado('parado'))

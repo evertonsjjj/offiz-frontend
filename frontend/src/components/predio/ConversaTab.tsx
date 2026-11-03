@@ -10,7 +10,7 @@ import {
   type ReactNode,
 } from 'react'
 import { createPortal } from 'react-dom'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { api, asList, ApiError, getSessionIdentity } from '../../lib/api'
 import { wsClient } from '../../lib/ws'
 import { consumirPedidoLanding, lerPedidoLanding, type PedidoLanding } from '../../lib/pedidoLanding'
@@ -477,6 +477,7 @@ export function ConversaTab({
   const { t, idioma } = useIdioma()
   const sessaoDaTela = getSessionIdentity()
   const [searchParams, setSearchParams] = useSearchParams()
+  const navegar = useNavigate()
   const { sucesso, falha, notificar } = useToasts()
   const { confirmar, solicitarTexto, dialogo } = useConfirmacao(`${getSessionIdentity()}:${orgId}:${slug}:${nivelPredio}`)
 
@@ -486,6 +487,12 @@ export function ConversaTab({
   function conversaDoContexto(c: ConversaResumo): boolean {
     return (c.organization_id === undefined || c.organization_id === orgId)
       && (c.office_slug === undefined || c.office_slug === (nivelPredio ? null : slug))
+  }
+  function conversaNoHistorico(c: ConversaResumo): boolean {
+    // O endpoint do prédio inclui somente os andares autorizados da dona.
+    // Isso amplia a lista, nunca o contexto de leitura/envio da conversa.
+    return conversaDoContexto(c) || (nivelPredio && c.organization_id === orgId
+      && typeof c.office_slug === 'string' && c.office_slug.length > 0)
   }
 
   const [conversas, setConversas] = useState<ConversaResumo[] | null>(null)
@@ -848,7 +855,7 @@ export function ConversaTab({
         controller.signal,
       )
       if (vigente()) {
-        const lista = asList<ConversaResumo>(data, 'conversas').filter(conversaDoContexto)
+        const lista = asList<ConversaResumo>(data, 'conversas').filter(conversaNoHistorico)
         const confirmada = ++versaoMetadadosRef.current
         for (const item of lista) metadadosConfirmadosRef.current.set(item.id, {
           ...(typeof item.titulo === 'string' ? { titulo: { versao: confirmada, valor: item.titulo } } : {}),
@@ -947,12 +954,12 @@ export function ConversaTab({
     try {
       const chave = chaveSelecao()
       const id = chave ? Number(localStorage.getItem(chave)) : 0
-      if (conversas.some((c) => c.id === id)) void abrirConversa(id, 'restaurar')
+      if (conversas.some((c) => c.id === id && conversaDoContexto(c))) void abrirConversa(id, 'restaurar')
       else {
         lembrarSelecao(null)
         // Um escritório preparado pode ter uma conversa fixada pelo consultor.
         // No primeiro acesso, abri-la sem atropelar um pedido já escrito.
-        const preparada = conversas.find((c) => c.fixada)
+        const preparada = conversas.find((c) => c.fixada && conversaDoContexto(c))
         if (preparada && !mensagemRef.current.trim()) void abrirConversa(preparada.id, 'restaurar')
       }
     } catch { /* a lista continua utilizável sem preferência */ }
@@ -1334,6 +1341,14 @@ export function ConversaTab({
   }, [orgId, slug, nivelPredio, conversaId, trabalhoEmVoo, recarregarMensagens, carregarConversas])
 
   async function abrirConversa(id: number, origem: 'interacao' | 'restaurar' | 'url' = 'interacao') {
+    const resumo = conversas?.find(c => c.id === id)
+    if (resumo && nivelPredio && resumo.office_slug && conversaNoHistorico(resumo)) {
+      // Uma conversa de andar mantém seu modo, anexos, permissões e rascunho.
+      // Não consultar o detalhe nem reaproveitar o compositor do CEO aqui.
+      const destino = new URLSearchParams({ org: String(orgId), slug: resumo.office_slug, conversa: String(id), vista: 'conversa' })
+      navegar(`/app?${destino}`, { replace: origem !== 'interacao' })
+      return
+    }
     restaurarSelecaoRef.current = false
     pararPolling()
     contextoConversaRef.current += 1
@@ -2521,6 +2536,7 @@ ${bloco}` : bloco,
                 >
                   <strong className="conversa-item-titulo">{c.titulo || t(`Conversa #${c.id}`, `Conversation #${c.id}`)}</strong>
                   <span className="conversa-item-meta">
+                    {nivelPredio && <span className="conversa-item-origem" title={c.office_slug ? (c.office_nome || c.office_slug) : t('Geral da empresa', 'Organization general')}>{c.office_slug ? (c.office_nome || c.office_slug) : t('Geral da empresa', 'Organization general')}</span>}
                     {c.fixada && <span className="conversa-fixada">{t('Fixada', 'Pinned')}</span>}
                     {(c.sinal || c.resumo?.trim()) && <span className={`conversa-sinal${c.sinal ? ` conversa-sinal--${c.sinal}` : ''}`}>{c.resumo?.trim() || (c.sinal === 'trabalhando' ? t('Em produção', 'In production') : c.sinal === 'precisa_de_voce' ? t('Ver pedido', 'Review request') : t('Entrega disponível', 'Deliverable available'))}</span>}
                     {ehJuris && <SeloModo modo={c.modo} />}
@@ -2537,10 +2553,10 @@ ${bloco}` : bloco,
                     <span className="conversa-atualizada">{tempoRelativo(c.atualizado_em, idioma)}</span>
                   </span>
                 </button>
-                <MenuConversa conversa={c} escopo={`${getSessionIdentity()}:${escopoRef.current}:${contextoHistoricoRef.current}`}
+                {conversaDoContexto(c) && <MenuConversa conversa={c} escopo={`${getSessionIdentity()}:${escopoRef.current}:${contextoHistoricoRef.current}`}
                   ocupado={excluindo.includes(c.id) || alterandoConversas.includes(c.id)}
                   aoRenomear={() => void organizarConversa(c)} aoFixar={() => void organizarConversa(c, !c.fixada)}
-                  aoExcluir={() => void excluir(c)} />
+                  aoExcluir={() => void excluir(c)} />}
               </li>
             ))}
           </ul>
